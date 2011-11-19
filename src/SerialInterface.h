@@ -38,7 +38,11 @@
 #include <vector>
 #include <gtkmm.h>
 
+#ifdef __unix__
 #include <termios.h>
+#elif defined _WIN32
+#include <windows.h>
+#endif
 
 #define I_SUCCESS 0
 #define I_ERROR 1
@@ -80,8 +84,13 @@ protected:
         sigc::connection port_callback_conn;
         Glib::RefPtr<Glib::IOChannel> port_iochannel;
         
+        #ifdef __unix__
         int port_fd;
         struct termios port_termios_saved;
+        #elif defined _WIN32
+        HANDLE h_port;
+        DCB dcb_serial_params_saved;
+        #endif
         
         Glib::ustring port;
         unsigned long baud;

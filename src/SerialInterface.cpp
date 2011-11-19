@@ -40,8 +40,11 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#ifdef __unix__
 #include <sys/ioctl.h>
 #include <linux/serial.h>
+#endif
 
 #include <iostream>
 #include <iomanip>
@@ -52,6 +55,9 @@
 std::vector<std::string> SerialInterface::enumerate_ports()
 {
         std::vector<std::string> SerialDeviceList = std::vector<std::string>();
+        
+        #ifdef __unix__
+        
         DIR *dp;
         struct dirent *dirp;
         std::string f, d;
@@ -121,6 +127,31 @@ std::vector<std::string> SerialInterface::enumerate_ports()
                 
                 closedir(dp);
         }
+        
+        #elif defined _WIN32
+        
+        TCHAR szDevices[65535];
+        unsigned long dwChars = QueryDosDevice(NULL, szDevices, 65535);
+        TCHAR *ptr = szDevices;
+        TCHAR *temp_ptr;
+        std::string c;
+        
+        while (dwChars)
+        {
+                int port;
+                
+                if (sscanf(ptr, "COM%d", &port) == 1)
+                {
+                        c = ptr;
+                        SerialDeviceList.push_back(c);
+                }
+                
+                temp_ptr = strchr(ptr, 0);
+                dwChars -= (DWORD)((temp_ptr - ptr) / sizeof(TCHAR) + 1);
+                ptr = temp_ptr + 1;
+        }
+        
+        #endif
         
         // sort it
         sort(SerialDeviceList.begin(), SerialDeviceList.end(), doj::alphanum_less<std::string>());
