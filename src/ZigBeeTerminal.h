@@ -37,6 +37,7 @@
 #include <gtkmm.h>
 
 #include "PortConfig.h"
+#include "SerialInterface.h"
 
 // Template class
 class ZigBeeTerminal : public Gtk::Window
@@ -49,6 +50,13 @@ protected:
         //Signal handlers:
         void on_file_quit_item_activate();
         void on_config_port_item_activate();
+        
+        void on_port_open();
+        void on_port_close();
+        void on_port_receive_data();
+        
+        void open_port();
+        void close_port();
         
         //Child widgets:
         // window
@@ -68,6 +76,8 @@ protected:
         
         Glib::ustring port;
         unsigned long baud;
+        
+        SerialInterface ser_int;
         
 };
 

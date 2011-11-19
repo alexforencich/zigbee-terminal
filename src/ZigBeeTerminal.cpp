@@ -84,6 +84,11 @@ ZigBeeTerminal::ZigBeeTerminal()
         dlgPort.set_port(port);
         dlgPort.set_baud(baud);
         
+        ser_int.port_opened().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_open) );
+        ser_int.port_closed().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_close) );
+        //ser_int.port_error().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_error) );
+        ser_int.port_receive_data().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_receive_data) );
+        
         show_all_children();
 }
 
@@ -110,13 +115,65 @@ void ZigBeeTerminal::on_config_port_item_activate()
         
         if (response == Gtk::RESPONSE_OK)
         {
-                //close_port();
+                close_port();
                 
                 port = dlgPort.get_port();
                 baud = dlgPort.get_baud();
                 
-                //open_serial_port();
+                open_port();
         }
 }
+
+
+void ZigBeeTerminal::on_port_open()
+{
+        gsize num;
+        
+        std::cout << "on_port_open()" << std::endl;
+        
+        port = ser_int.get_port();
+        baud = ser_int.get_baud();
+        
+        status.pop();
+        status.push(port + ": " + Glib::ustring::format(baud));
+        
+        ser_int.write("test", 4, num);
+}
+
+
+void ZigBeeTerminal::on_port_close()
+{
+        status.pop();
+        status.push("Not connected");
+}
+
+
+void ZigBeeTerminal::on_port_receive_data()
+{
+        gsize num;
+        static char buf[64];
+        
+        ser_int.read(buf, 64, num);
+        for (int i = 0; i < num; i++)
+                std::cout << buf[i];
+}
+
+
+void ZigBeeTerminal::open_port()
+{
+        if (ser_int.is_open())
+                close_port();
+        
+        ser_int.set_port(port);
+        ser_int.set_baud(baud);
+        ser_int.open_port();
+}
+
+
+void ZigBeeTerminal::close_port()
+{
+        ser_int.close_port();
+}
+
 
 
