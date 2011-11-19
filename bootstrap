@@ -1,0 +1,11 @@
+#!/bin/sh
+
+dir=`pwd`
+
+echo "Bootstrapping in $dir..."
+
+aclocal $ACLOCAL_FLAGS
+autoheader
+automake --foreign --add-missing --copy
+autoconf
+
