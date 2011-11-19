@@ -1,9 +1,9 @@
 /************************************************************************/
-/* ZigBeeTerminal                                                       */
+/* PortConfig                                                           */
 /*                                                                      */
-/* ZigBee Terminal                                                      */
+/* VOA Driver Utility - Port Configuration                              */
 /*                                                                      */
-/* ZigBeeTerminal.h                                                     */
+/* PortConfig.h                                                         */
 /*                                                                      */
 /* Alex Forencich <alex@alexforencich.com>                              */
 /*                                                                      */
@@ -31,39 +31,68 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef __ZIGBEE_TERMINAL_H
-#define __ZIGBEE_TERMINAL_H
+#ifndef __PORTCONFIG_H
+#define __PORTCONFIG_H
+
+#include <string>
 
 #include <gtkmm.h>
 
-#include "PortConfig.h"
-
-// Template class
-class ZigBeeTerminal : public Gtk::Window
+// PortConfig class
+class PortConfig : public Gtk::Dialog
 {
 public:
-        ZigBeeTerminal();
-        virtual ~ZigBeeTerminal();
+        PortConfig();
+        virtual ~PortConfig();
         
+        void refresh_ports();
+        
+        void set_port(Glib::ustring p);
+        void set_baud(unsigned long b);
+        
+        Glib::ustring get_port();
+        unsigned long get_baud();
+
 protected:
         //Signal handlers:
-        void on_file_quit_item_activate();
-        void on_config_port_item_activate();
+        virtual void on_show();
+        void on_ok_click();
+        void on_cancel_click();
         
+        Glib::ustring select_port(Glib::ustring p);
+        unsigned long select_baud(unsigned long b);
+
+        //Tree model columns:
+        class TextColumn : public Gtk::TreeModel::ColumnRecord
+        {
+        public:
+
+        TextColumn()
+        { add(name); }
+
+        Gtk::TreeModelColumn<Glib::ustring> name; //The data to choose - this must be text.
+        };
+
+        TextColumn cText;
+
         //Child widgets:
-        // window
-        Gtk::VBox vbox1;
-        // menu bar
-        Gtk::MenuBar main_menu;
-        Gtk::MenuItem file_menu_item;
-        Gtk::Menu file_menu;
-        Gtk::ImageMenuItem file_quit_item;
-        Gtk::MenuItem config_menu_item;
-        Gtk::Menu config_menu;
-        Gtk::ImageMenuItem config_port_item;
+        Gtk::Button *btnOK;
+        Gtk::Button *btnCancel;
+        Gtk::Frame frame;
+        Gtk::Table table;
+        Gtk::Label label1;
+        Gtk::Label label2;
+        Gtk::ComboBox cmbPort;
+        Gtk::ComboBox cmbSpeed;
         
-        PortConfig dlgPort;
+        Glib::RefPtr<Gtk::ListStore> cmbPort_tm;
+        Glib::RefPtr<Gtk::ListStore> cmbSpeed_tm;
         
+        Glib::ustring port;
+        unsigned long baud;
 };
 
-#endif //__ZIGBEE_TERMINAL_H
+// Prototypes
+
+
+#endif //__PORTCONFIG_H

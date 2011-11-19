@@ -63,6 +63,16 @@ ZigBeeTerminal::ZigBeeTerminal()
         file_quit_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_file_quit_item_activate) );
         file_menu.append(file_quit_item);
         
+        config_menu_item.set_label("_Config");
+        config_menu_item.set_use_underline(true);
+        main_menu.append(config_menu_item);
+        
+        config_menu_item.set_submenu(config_menu);
+        
+        config_port_item.set_label("Port");
+        config_port_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_config_port_item_activate) );
+        config_menu.append(config_port_item);
+        
         show_all_children();
 }
 
@@ -76,6 +86,12 @@ ZigBeeTerminal::~ZigBeeTerminal()
 void ZigBeeTerminal::on_file_quit_item_activate()
 {
         gtk_main_quit();
+}
+
+
+void ZigBeeTerminal::on_config_port_item_activate()
+{
+        dlgPort.show();
 }
 
 
