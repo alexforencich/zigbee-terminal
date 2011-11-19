@@ -46,6 +46,23 @@ ZigBeeTerminal::ZigBeeTerminal()
         set_title("ZigBee Terminal");
         set_position(Gtk::WIN_POS_CENTER);
         
+        add(vbox1);
+        
+        // Main menu
+        
+        vbox1.pack_start(main_menu, false, true, 0);
+        
+        file_menu_item.set_label("_File");
+        file_menu_item.set_use_underline(true);
+        main_menu.append(file_menu_item);
+        
+        file_menu_item.set_submenu(file_menu);
+        
+        file_quit_item.set_label(Gtk::Stock::QUIT.id);
+        file_quit_item.set_use_stock(true);
+        file_quit_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_file_quit_item_activate) );
+        file_menu.append(file_quit_item);
+        
         show_all_children();
 }
 
@@ -53,6 +70,12 @@ ZigBeeTerminal::ZigBeeTerminal()
 ZigBeeTerminal::~ZigBeeTerminal()
 {
         
+}
+
+
+void ZigBeeTerminal::on_file_quit_item_activate()
+{
+        gtk_main_quit();
 }
 
 

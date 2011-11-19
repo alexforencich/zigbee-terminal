@@ -44,6 +44,17 @@ public:
         virtual ~ZigBeeTerminal();
         
 protected:
+        //Signal handlers:
+        void on_file_quit_item_activate();
+        
+        //Child widgets:
+        // window
+        Gtk::VBox vbox1;
+        // menu bar
+        Gtk::MenuBar main_menu;
+        Gtk::MenuItem file_menu_item;
+        Gtk::Menu file_menu;
+        Gtk::ImageMenuItem file_quit_item;
         
 };
 

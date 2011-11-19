@@ -42,7 +42,7 @@ int main (int argc, char *argv[])
         ZigBeeTerminal t;
         
         kit.run(t);
-
+        
         return 0;
 }
 
