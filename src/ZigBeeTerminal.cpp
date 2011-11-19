@@ -156,6 +156,7 @@ void ZigBeeTerminal::on_port_receive_data()
         ser_int.read(buf, 64, num);
         for (int i = 0; i < num; i++)
                 std::cout << buf[i];
+        std::cout << std::endl;
 }
 
 

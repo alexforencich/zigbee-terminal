@@ -305,7 +305,7 @@ int SerialInterface::open_port()
         
         port_iochannel = Glib::IOChannel::create_from_fd(port_fd);
         port_iochannel->set_encoding("");
-        port_callback_conn = Glib::signal_io().connect(sigc::mem_fun(*this, &SerialInterface::port_callback), port_fd, Glib::IO_IN);
+        port_callback_conn = Glib::signal_io().connect(sigc::mem_fun(*this, &SerialInterface::port_callback), port_iochannel, Glib::IO_IN);
         
         std::cout << "Port opened." << std::endl;
         
