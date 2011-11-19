@@ -3,7 +3,7 @@
 /*                                                                      */
 /* ZigBee Terminal                                                      */
 /*                                                                      */
-/* zigbee_terminal.cpp                                                  */
+/* ZigBeeTerminal.h                                                     */
 /*                                                                      */
 /* Alex Forencich <alex@alexforencich.com>                              */
 /*                                                                      */
@@ -31,28 +31,20 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "zigbee_terminal.h"
+#ifndef __ZIGBEE_TERMINAL_H
+#define __ZIGBEE_TERMINAL_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <gtkmm.h>
 
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include <vector>
-
-ZigBeeTerminal::ZigBeeTerminal()
+// Template class
+class ZigBeeTerminal : public Gtk::Window
 {
-        set_title("ZigBee Terminal");
-        set_position(Gtk::WIN_POS_CENTER);
+public:
+        ZigBeeTerminal();
+        virtual ~ZigBeeTerminal();
         
-        show_all_children();
-}
-
-
-ZigBeeTerminal::~ZigBeeTerminal()
-{
+protected:
         
-}
+};
 
-
+#endif //__ZIGBEE_TERMINAL_H

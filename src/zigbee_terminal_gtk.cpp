@@ -33,7 +33,7 @@
 
 #include <gtkmm.h>
 
-#include "zigbee_terminal.h"
+#include "ZigBeeTerminal.h"
 
 int main (int argc, char *argv[])
 {
