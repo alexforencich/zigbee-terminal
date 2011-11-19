@@ -1,7 +1,7 @@
 /************************************************************************/
 /* PortConfig                                                           */
 /*                                                                      */
-/* VOA Driver Utility - Port Configuration                              */
+/* ZigBee Terminal - Port Configuration                                 */
 /*                                                                      */
 /* PortConfig.cpp                                                       */
 /*                                                                      */
@@ -32,7 +32,7 @@
 /************************************************************************/
 
 #include "PortConfig.h"
-//#include "SerialInterface.h"
+#include "SerialInterface.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -124,7 +124,7 @@ void PortConfig::refresh_ports()
 {
         int ind = -1;
         int i = 0;
-        /*std::vector<std::string> ports = SerialInterface::enumerate_ports();
+        std::vector<std::string> ports = SerialInterface::enumerate_ports();
         std::vector<std::string>::iterator it;
         
         Gtk::TreeModel::Row row;
@@ -144,7 +144,7 @@ void PortConfig::refresh_ports()
                 ind = 0;
         
         cmbPort.set_active(ind);
-        select_port(port);*/
+        select_port(port);
 }
 
 void PortConfig::on_show()

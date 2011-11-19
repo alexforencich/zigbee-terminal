@@ -1,7 +1,7 @@
 /************************************************************************/
 /* PortConfig                                                           */
 /*                                                                      */
-/* VOA Driver Utility - Port Configuration                              */
+/* ZigBee Terminal - Port Configuration                                 */
 /*                                                                      */
 /* PortConfig.h                                                         */
 /*                                                                      */

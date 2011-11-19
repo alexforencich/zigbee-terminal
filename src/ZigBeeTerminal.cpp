@@ -73,6 +73,17 @@ ZigBeeTerminal::ZigBeeTerminal()
         config_port_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_config_port_item_activate) );
         config_menu.append(config_port_item);
         
+        // status bar
+        
+        status.push("Not connected");
+        vbox1.pack_start(status, false, true, 0);
+        
+        baud = 115200;
+        port = "";
+        
+        dlgPort.set_port(port);
+        dlgPort.set_baud(baud);
+        
         show_all_children();
 }
 
@@ -91,7 +102,21 @@ void ZigBeeTerminal::on_file_quit_item_activate()
 
 void ZigBeeTerminal::on_config_port_item_activate()
 {
-        dlgPort.show();
+        int response;
+        
+        dlgPort.set_port(port);
+        dlgPort.set_baud(baud);
+        response = dlgPort.run();
+        
+        if (response == Gtk::RESPONSE_OK)
+        {
+                //close_port();
+                
+                port = dlgPort.get_port();
+                baud = dlgPort.get_baud();
+                
+                //open_serial_port();
+        }
 }
 
 

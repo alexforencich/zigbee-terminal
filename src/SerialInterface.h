@@ -1,9 +1,9 @@
 /************************************************************************/
-/* ZigBeeTerminal                                                       */
+/* SerialInterface                                                      */
 /*                                                                      */
-/* ZigBee Terminal                                                      */
+/* ZigBee Terminal - Serial Port Interface                              */
 /*                                                                      */
-/* ZigBeeTerminal.h                                                     */
+/* SerialInterface.h                                                    */
 /*                                                                      */
 /* Alex Forencich <alex@alexforencich.com>                              */
 /*                                                                      */
@@ -31,44 +31,69 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef __ZIGBEE_TERMINAL_H
-#define __ZIGBEE_TERMINAL_H
+#ifndef __SERIALINTERFACE_H
+#define __SERIALINTERFACE_H
 
+#include <string>
+#include <vector>
 #include <gtkmm.h>
 
-#include "PortConfig.h"
+#include <termios.h>
 
-// Template class
-class ZigBeeTerminal : public Gtk::Window
+#define I_SUCCESS 0
+#define I_ERROR 1
+#define I_TIMEOUT 2
+#define I_PORT_NOT_OPEN 3
+
+// class SerialInterface
+class SerialInterface
 {
 public:
-        ZigBeeTerminal();
-        virtual ~ZigBeeTerminal();
+        SerialInterface();
+        virtual ~SerialInterface();
+        
+        int write(const char *buf, gsize count, gsize& bytes_written);
+        int read(char *buf, gsize count, gsize& bytes_read);
+        
+        int open_port();
+        int close_port();
+        
+        bool is_open();
+        
+        Glib::ustring set_port(Glib::ustring p);
+        Glib::ustring get_port();
+        unsigned long set_baud(unsigned long b);
+        unsigned long get_baud();
+        
+        static std::vector<std::string> enumerate_ports();
+        
+        sigc::signal<void> port_opened();
+        sigc::signal<void> port_closed();
+        sigc::signal<void> port_error();
+        sigc::signal<void> port_receive_data();
         
 protected:
-        //Signal handlers:
-        void on_file_quit_item_activate();
-        void on_config_port_item_activate();
+        bool port_callback(Glib::IOCondition io_condition);
         
-        //Child widgets:
-        // window
-        Gtk::VBox vbox1;
-        // menu bar
-        Gtk::MenuBar main_menu;
-        Gtk::MenuItem file_menu_item;
-        Gtk::Menu file_menu;
-        Gtk::ImageMenuItem file_quit_item;
-        Gtk::MenuItem config_menu_item;
-        Gtk::Menu config_menu;
-        Gtk::ImageMenuItem config_port_item;
-        // status bar
-        Gtk::Statusbar status;
+        void reset_buffer();
         
-        PortConfig dlgPort;
+        sigc::connection port_callback_conn;
+        Glib::RefPtr<Glib::IOChannel> port_iochannel;
+        
+        int port_fd;
+        struct termios port_termios_saved;
         
         Glib::ustring port;
         unsigned long baud;
         
+        std::deque<char> read_data_queue;
+        
+        sigc::signal<void> m_port_opened;
+        sigc::signal<void> m_port_closed;
+        sigc::signal<void> m_port_error;
+        sigc::signal<void> m_port_receive_data;
 };
 
-#endif //__ZIGBEE_TERMINAL_H
+#endif //__SERIALINTERFACE_H
+
+
