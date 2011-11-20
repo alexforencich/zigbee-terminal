@@ -50,6 +50,7 @@ protected:
         //Signal handlers:
         void on_file_quit_item_activate();
         void on_config_port_item_activate();
+        void on_config_close_port_item_activate();
         
         void on_port_open();
         void on_port_close();
@@ -69,6 +70,7 @@ protected:
         Gtk::MenuItem config_menu_item;
         Gtk::Menu config_menu;
         Gtk::ImageMenuItem config_port_item;
+        Gtk::ImageMenuItem config_close_port_item;
         // status bar
         Gtk::Statusbar status;
         

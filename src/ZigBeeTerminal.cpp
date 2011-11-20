@@ -73,6 +73,10 @@ ZigBeeTerminal::ZigBeeTerminal()
         config_port_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_config_port_item_activate) );
         config_menu.append(config_port_item);
         
+        config_close_port_item.set_label("Close Port");
+        config_close_port_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_config_close_port_item_activate) );
+        config_menu.append(config_close_port_item);
+        
         // status bar
         
         status.push("Not connected");
@@ -122,6 +126,12 @@ void ZigBeeTerminal::on_config_port_item_activate()
                 
                 open_port();
         }
+}
+
+
+void ZigBeeTerminal::on_config_close_port_item_activate()
+{
+        close_port();
 }
 
 
