@@ -161,9 +161,18 @@ void ZigBeeTerminal::on_port_close()
 void ZigBeeTerminal::on_port_receive_data()
 {
         gsize num;
+        int status;
         static char buf[64];
         
-        ser_int.read(buf, 64, num);
+        status = ser_int.read(buf, 64, num);
+        
+        if (status == I_ERROR)
+        {
+                std::cout << "Read error!" << std::endl;
+                return;
+        }
+        
+        std::cout << "Read " << num << " bytes: ";
         for (int i = 0; i < num; i++)
                 std::cout << buf[i];
         std::cout << std::endl;
