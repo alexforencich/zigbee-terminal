@@ -204,12 +204,12 @@ void SerialInterface::select_thread()
         fd_set input;
         struct timeval timeout;
         
-        FD_ZERO(&input);
-        FD_SET(port_fd, &input);
-        max_fd = port_fd + 1;
-        
         while (is_open())
         {
+                FD_ZERO(&input);
+                FD_SET(port_fd, &input);
+                max_fd = port_fd + 1;
+                
                 timeout.tv_sec = 1;
                 timeout.tv_usec = 0;
                 
