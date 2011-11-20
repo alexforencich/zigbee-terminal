@@ -48,7 +48,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <algorithm>
 
 #include "alphanum.h"
 
@@ -69,7 +68,7 @@ std::vector<std::string> SerialInterface::enumerate_ports()
         
         if ((dp = opendir("/dev/")) == NULL)
         {
-                std::cout << "Error (" << errno << ") opening /dev/" << std::endl;
+                std::cerr << "Error (" << errno << ") opening /dev/" << std::endl;
         }
         else
         {
@@ -81,7 +80,7 @@ std::vector<std::string> SerialInterface::enumerate_ports()
                         {
                                 if ((fd = ::open(d.c_str(), O_RDWR|O_NONBLOCK)) < 0)
                                 {
-                                        std::cout << "Cannot open port " << d << std::endl;
+                                        std::cerr << "Cannot open port " << d << std::endl;
                                         continue;
                                 }
                                 
@@ -89,7 +88,7 @@ std::vector<std::string> SerialInterface::enumerate_ports()
                                 
                                 if (::ioctl(fd, TIOCGSERIAL, &serinfo) < 0)
                                 {
-                                        std::cout << "Cannot get serial info for " << d << std::endl;
+                                        std::cerr << "Cannot get serial info for " << d << std::endl;
                                         ::close(fd);
                                         continue;
                                 }
@@ -166,6 +165,7 @@ SerialInterface::SerialInterface()
 {
         port_fd = -1;
         baud = 0;
+        signal_receive_data.connect( sigc::mem_fun(*this, &SerialInterface::on_receive_data) );
 }
 
 SerialInterface::~SerialInterface()
@@ -173,44 +173,62 @@ SerialInterface::~SerialInterface()
         close_port();
 }
 
-bool SerialInterface::port_callback(Glib::IOCondition io_condition)
+void SerialInterface::on_receive_data()
 {
-        static char buf[1024];
-        gsize num;
-        int st;
-        int i;
-        char ch;
-        
-        /*num = 1024;
-        
-        while (num == 1024)
-        {
-                st = read(buf, 1024, num);
-                for (i = 0; i < num; i++)
-                        read_data_queue.push_back(buf[i]);
-        }*/
-        
         m_port_receive_data.emit();
+}
+
+void SerialInterface::launch_select_thread()
+{
+        Glib::Thread::create( sigc::mem_fun(*this, &SerialInterface::select_thread), false );
+}
+
+void SerialInterface::select_thread()
+{
+        int n, max_fd;
+        fd_set input;
+        struct timeval timeout;
         
-        return true;
+        FD_ZERO(&input);
+        FD_SET(port_fd, &input);
+        max_fd = port_fd + 1;
+        
+        while (is_open())
+        {
+                timeout.tv_sec = 1;
+                timeout.tv_usec = 0;
+                
+                n = select(max_fd, &input, NULL, NULL, &timeout);
+                
+                if (n < 0)
+                {
+                        std::cerr << "Error: select failed!" << std::endl;
+                        return;
+                }
+                else if (n == 0)
+                {
+                        // timeout...
+                }
+                else
+                {
+                        if (FD_ISSET(port_fd, &input))
+                        {
+                                signal_receive_data.emit();
+                        }
+                }
+        }
 }
 
 int SerialInterface::write(const char *buf, gsize count, gsize& bytes_written)
 {
-        int st;
-        gsize i;
-        
-        if (port_fd == -1)
+        if (!is_open())
                 return I_PORT_NOT_OPEN;
         
-        try
+        bytes_written = ::write(port_fd, buf, count);
+        
+        if (bytes_written == -1)
         {
-                st = port_iochannel->write(buf, count, bytes_written);
-                port_iochannel->flush();
-        }
-        catch (Glib::IOChannelError &ex)
-        {
-                std::cout << "Error writing serial port: (" << ex.code() << ") " << ex.what() << std::endl;
+                std::cerr << "Error writing serial port (errno " << errno << ")" << std::endl;
                 m_port_error.emit();
                 close_port();
                 return I_ERROR;
@@ -219,32 +237,24 @@ int SerialInterface::write(const char *buf, gsize count, gsize& bytes_written)
         if (bytes_written > 0)
         {
                 std::cout << "Write: ";
-                for (i = 0; i < bytes_written; i++)
+                for (gsize i = 0; i < bytes_written; i++)
                         std::cout << std::setfill('0') << std::setw(2) << std::hex << ((uint)buf[i] & 0xff) << ' ';
                 std::cout << std::endl;
         }
         
-        if (st == Glib::IO_STATUS_NORMAL)
-                return I_SUCCESS;
-        
-        return I_ERROR;
+        return I_SUCCESS;
 }
 
 int SerialInterface::read(char *buf, gsize count, gsize& bytes_read)
 {
-        int st;
-        gsize i;
-        
-        if (port_fd == -1)
+        if (!is_open())
                 return I_PORT_NOT_OPEN;
         
-        try
+        bytes_read = ::read(port_fd, buf, count);
+        
+        if (bytes_read == -1)
         {
-                st = port_iochannel->read(buf, count, bytes_read);
-        }
-        catch (Glib::IOChannelError &ex)
-        {
-                std::cout << "Error reading serial port: (" << ex.code() << ") " << ex.what() << std::endl;
+                std::cerr << "Error reading serial port (errno " << errno << ")" << std::endl;
                 m_port_error.emit();
                 close_port();
                 return I_ERROR;
@@ -253,15 +263,12 @@ int SerialInterface::read(char *buf, gsize count, gsize& bytes_read)
         if (bytes_read > 0)
         {
                 std::cout << "Read: ";
-                for (i = 0; i < bytes_read; i++)
+                for (gsize i = 0; i < bytes_read; i++)
                         std::cout << std::setfill('0') << std::setw(2) << std::hex << ((uint)buf[i] & 0xff) << ' ';
                 std::cout << std::endl;
         }
         
-        if (st == Glib::IO_STATUS_NORMAL)
-                return I_SUCCESS;
-        
-        return I_ERROR;
+        return I_SUCCESS;
 }
 
 int SerialInterface::open_port()
@@ -274,7 +281,7 @@ int SerialInterface::open_port()
         
         if (port_fd == -1)
         {
-                std::cout << "Error opening port " + port << std::endl;
+                std::cerr << "Error opening port " + port << std::endl;
                 return I_ERROR;
         }
         
@@ -332,11 +339,7 @@ int SerialInterface::open_port()
         tcflush(port_fd, TCOFLUSH);  
         tcflush(port_fd, TCIFLUSH);
         
-        reset_buffer();
-        
-        port_iochannel = Glib::IOChannel::create_from_fd(port_fd);
-        port_iochannel->set_encoding("");
-        port_callback_conn = Glib::signal_io().connect(sigc::mem_fun(*this, &SerialInterface::port_callback), port_iochannel, Glib::IO_IN);
+        launch_select_thread();
         
         std::cout << "Port opened." << std::endl;
         
@@ -349,16 +352,7 @@ int SerialInterface::close_port()
 {
         if (port_fd != -1)
         {
-                port_callback_conn.disconnect();
                 
-                try
-                {
-                        port_iochannel->close();
-                }
-                catch (Glib::IOChannelError &ex)
-                {
-                        // ignore iochannel error
-                }
                 
                 tcsetattr(port_fd, TCSANOW, &port_termios_saved);
                 tcflush(port_fd, TCOFLUSH);  
@@ -372,11 +366,6 @@ int SerialInterface::close_port()
         }
         
         return I_SUCCESS;
-}
-
-void SerialInterface::reset_buffer()
-{
-        read_data_queue.clear();
 }
 
 Glib::ustring SerialInterface::set_port(Glib::ustring p)

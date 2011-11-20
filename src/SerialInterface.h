@@ -77,12 +77,11 @@ public:
         sigc::signal<void> port_receive_data();
         
 protected:
-        bool port_callback(Glib::IOCondition io_condition);
+        void on_receive_data();
+        void select_thread();
+        void launch_select_thread();
         
-        void reset_buffer();
-        
-        sigc::connection port_callback_conn;
-        Glib::RefPtr<Glib::IOChannel> port_iochannel;
+        sigc::signal<void> signal_receive_data;
         
         #ifdef __unix__
         int port_fd;
@@ -94,8 +93,6 @@ protected:
         
         Glib::ustring port;
         unsigned long baud;
-        
-        std::deque<char> read_data_queue;
         
         sigc::signal<void> m_port_opened;
         sigc::signal<void> m_port_closed;
