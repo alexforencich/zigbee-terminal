@@ -84,11 +84,17 @@ protected:
         sigc::signal<void> signal_receive_data;
         
         #ifdef __unix__
+        
         int port_fd;
         struct termios port_termios_saved;
+        
         #elif defined _WIN32
+        
         HANDLE h_port;
         DCB dcb_serial_params_saved;
+        HANDLE h_overlapped;
+        HANDLE h_overlapped_thread;
+        
         #endif
         
         Glib::ustring port;

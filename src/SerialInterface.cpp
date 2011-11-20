@@ -42,8 +42,10 @@
 #include <fcntl.h>
 
 #ifdef __unix__
+
 #include <sys/ioctl.h>
 #include <linux/serial.h>
+
 #endif
 
 #include <iostream>
@@ -163,7 +165,18 @@ std::vector<std::string> SerialInterface::enumerate_ports()
 
 SerialInterface::SerialInterface()
 {
+        #ifdef __unix__
+        
         port_fd = -1;
+        
+        #elif defined _WIN32
+        
+        h_port = INVALID_HANDLE_VALUE;
+        h_overlapped = INVALID_HANDLE_VALUE;
+        h_overlapped_thread = INVALID_HANDLE_VALUE;
+        
+        #endif
+        
         baud = 0;
         signal_receive_data.connect( sigc::mem_fun(*this, &SerialInterface::on_receive_data) );
 }
@@ -185,6 +198,8 @@ void SerialInterface::launch_select_thread()
 
 void SerialInterface::select_thread()
 {
+        #ifdef __unix__
+        
         int n, max_fd;
         fd_set input;
         struct timeval timeout;
@@ -217,12 +232,53 @@ void SerialInterface::select_thread()
                         }
                 }
         }
+        
+        #elif defined _WIN32
+        
+        std::cout << "Thread start" << std::endl;
+        
+        while (is_open())
+        {
+                ResetEvent(h_overlapped_thread);
+                
+                DWORD e_event = 0;
+                
+                OVERLAPPED ov;
+                memset(&ov, 0, sizeof(OVERLAPPED));
+                ov.hEvent = h_overlapped_thread;
+                
+                if (!WaitCommEvent(h_port, &e_event, &ov))
+                {
+                        if (GetLastError() != ERROR_IO_PENDING)
+                        {
+                                std::cerr << "Unable to wait for COM event (" << GetLastError() << ")" << std::endl;
+                                return;
+                        }
+                }
+                
+                if (WaitForSingleObject(h_overlapped_thread,INFINITE) != WAIT_OBJECT_0)
+                {
+                        std::cerr << "Unable to wait until COM event has arrived" << std::endl;
+                        return;
+                }
+                
+                if (e_event == EV_RXCHAR)
+                        signal_receive_data.emit();
+        }
+        
+        #endif
 }
 
 int SerialInterface::write(const char *buf, gsize count, gsize& bytes_written)
 {
+        #ifdef __WIN32
+        DWORD d;
+        #endif
+        
         if (!is_open())
                 return I_PORT_NOT_OPEN;
+        
+        #ifdef __unix__
         
         bytes_written = ::write(port_fd, buf, count);
         
@@ -234,11 +290,51 @@ int SerialInterface::write(const char *buf, gsize count, gsize& bytes_written)
                 return I_ERROR;
         }
         
+        #elif defined _WIN32
+        
+        OVERLAPPED ov;
+        memset(&ov, 0, sizeof(OVERLAPPED));
+        ov.hEvent = h_overlapped;
+        
+        if (!WriteFile(h_port, buf, count, &d, &ov))
+        {
+                if (GetLastError() != ERROR_IO_PENDING)
+                {
+                        std::cerr << "Error writing serial port (" << GetLastError() << ")" << std::endl;
+                        return I_ERROR;
+                }
+                switch (WaitForSingleObject(ov.hEvent, INFINITE))
+                {
+                case WAIT_OBJECT_0:
+                        if (!GetOverlappedResult(h_port, &ov, &d, TRUE))
+                        {
+                                std::cerr << "Overlapped completed without result (" << GetLastError() << ")" << std::endl;
+                                return I_ERROR;
+                        }
+                        break;
+                case WAIT_TIMEOUT:
+                        CancelIo(h_port);
+                        std::cerr << "Timeout" << std::endl;
+                        return I_ERROR;
+                default:
+                        std::cerr << "Unable to wait until data has been sent (" << GetLastError() << ")" << std::endl;
+                        return I_ERROR;
+                }
+        }
+        else
+        {
+                SetEvent(ov.hEvent);
+        }
+        
+        bytes_written = d;
+        
+        #endif
+        
         if (bytes_written > 0)
         {
                 std::cout << "Write: ";
                 for (gsize i = 0; i < bytes_written; i++)
-                        std::cout << std::setfill('0') << std::setw(2) << std::hex << ((uint)buf[i] & 0xff) << ' ';
+                        std::cout << std::setfill('0') << std::setw(2) << std::hex << ((unsigned int)buf[i] & 0xff) << ' ';
                 std::cout << std::endl;
         }
         
@@ -247,8 +343,14 @@ int SerialInterface::write(const char *buf, gsize count, gsize& bytes_written)
 
 int SerialInterface::read(char *buf, gsize count, gsize& bytes_read)
 {
+        #ifdef __WIN32
+        DWORD d;
+        #endif
+        
         if (!is_open())
                 return I_PORT_NOT_OPEN;
+        
+        #ifdef __unix__
         
         bytes_read = ::read(port_fd, buf, count);
         
@@ -260,11 +362,51 @@ int SerialInterface::read(char *buf, gsize count, gsize& bytes_read)
                 return I_ERROR;
         }
         
+        #elif defined _WIN32
+        
+        OVERLAPPED ov;
+        memset(&ov, 0, sizeof(OVERLAPPED));
+        ov.hEvent = h_overlapped;
+        
+        if (!ReadFile(h_port, buf, count, &d, &ov))
+        {
+                if (GetLastError() != ERROR_IO_PENDING)
+                {
+                        std::cerr << "Error reading serial port (" << GetLastError() << ")" << std::endl;
+                        return I_ERROR;
+                }
+                switch (WaitForSingleObject(ov.hEvent, INFINITE))
+                {
+                case WAIT_OBJECT_0:
+                        if (!GetOverlappedResult(h_port, &ov, &d, FALSE))
+                        {
+                                std::cerr << "Overlapped completed without result (" << GetLastError() << ")" << std::endl;
+                                return I_ERROR;
+                        }
+                        break;
+                case WAIT_TIMEOUT:
+                        CancelIo(h_port);
+                        std::cerr << "Timeout" << std::endl;
+                        return I_ERROR;
+                default:
+                        std::cerr << "Unable to wait until data has been read (" << GetLastError() << ")" << std::endl;
+                        return I_ERROR;
+                }
+        }
+        else
+        {
+                SetEvent(ov.hEvent);
+        }
+        
+        bytes_read = d;
+        
+        #endif
+        
         if (bytes_read > 0)
         {
                 std::cout << "Read: ";
                 for (gsize i = 0; i < bytes_read; i++)
-                        std::cout << std::setfill('0') << std::setw(2) << std::hex << ((uint)buf[i] & 0xff) << ' ';
+                        std::cout << std::setfill('0') << std::setw(2) << std::hex << ((unsigned int)buf[i] & 0xff) << ' ';
                 std::cout << std::endl;
         }
         
@@ -273,17 +415,43 @@ int SerialInterface::read(char *buf, gsize count, gsize& bytes_read)
 
 int SerialInterface::open_port()
 {
+        #ifdef __unix__
+        
         struct termios t;
+        
+        #elif defined _WIN32
+        
+        DCB dcb_serial_params = {0};
+        COMMTIMEOUTS timeouts = {0};
+        
+        #endif
         
         close_port();
         
+        #ifdef __unix__
+        
         port_fd = open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
         
-        if (port_fd == -1)
+        #elif defined _WIN32
+        
+        h_port = CreateFile(("\\\\.\\" + port).c_str(),
+                GENERIC_READ | GENERIC_WRITE,
+                0,
+                0,
+                OPEN_EXISTING,
+                //FILE_ATTRIBUTE_NORMAL,
+                FILE_FLAG_OVERLAPPED,
+                0);
+        
+        #endif
+        
+        if (!is_open())
         {
                 std::cerr << "Error opening port " + port << std::endl;
                 return I_ERROR;
         }
+        
+        #ifdef __unix__
         
         tcgetattr(port_fd, &t);
         memcpy(&port_termios_saved, &t, sizeof(struct termios));
@@ -339,6 +507,108 @@ int SerialInterface::open_port()
         tcflush(port_fd, TCOFLUSH);  
         tcflush(port_fd, TCIFLUSH);
         
+        #elif defined _WIN32
+        
+        if (!SetCommMask(h_port, EV_RXCHAR))
+        {
+                std::cerr << "Error setting mask!" << std::endl;
+                close_port();
+                return I_ERROR;
+        }
+        
+        dcb_serial_params.DCBlength=sizeof(dcb_serial_params);
+        
+        if (!GetCommState(h_port, &dcb_serial_params)) {
+                std::cerr << "Error getting state!" << std::endl;
+                close_port();
+                return I_ERROR;
+        }
+        
+        memcpy(&dcb_serial_params_saved, &dcb_serial_params, sizeof(dcb_serial_params));
+        
+        dcb_serial_params.BaudRate=CBR_19200;
+        switch (baud)
+        {
+                case 300:
+                        dcb_serial_params.BaudRate=CBR_300;
+                        break;
+                case 600:
+                        dcb_serial_params.BaudRate=CBR_600;
+                        break;
+                case 1200:
+                        dcb_serial_params.BaudRate=CBR_1200;
+                        break;
+                case 2400:
+                        dcb_serial_params.BaudRate=CBR_2400;
+                        break;
+                case 4800:
+                        dcb_serial_params.BaudRate=CBR_4800;
+                        break;
+                case 9600:
+                        dcb_serial_params.BaudRate=CBR_9600;
+                        break;
+                case 19200:
+                        dcb_serial_params.BaudRate=CBR_19200;
+                        break;
+                case 38400:
+                        dcb_serial_params.BaudRate=CBR_38400;
+                        break;
+                case 57600:
+                        dcb_serial_params.BaudRate=CBR_57600;
+                        break;
+                case 115200:
+                        dcb_serial_params.BaudRate=CBR_115200;
+                        break;
+        }
+        
+        dcb_serial_params.ByteSize=8;
+        dcb_serial_params.StopBits=ONESTOPBIT;
+        dcb_serial_params.Parity=NOPARITY;
+        
+        if(!SetCommState(h_port, &dcb_serial_params)){
+                std::cerr << "Error setting state!" << std::endl;
+                close_port();
+                return I_ERROR;
+        }
+        
+        if(!GetCommTimeouts(h_port, &timeouts)){
+                std::cerr << "Error getting timeouts!" << std::endl;
+                close_port();
+                return I_ERROR;
+        }
+        
+        timeouts.ReadIntervalTimeout=MAXDWORD;
+        timeouts.ReadTotalTimeoutConstant=0;
+        timeouts.ReadTotalTimeoutMultiplier=0;
+        //timeouts.WriteTotalTimeoutConstant=50;
+        //timeouts.WriteTotalTimeoutMultiplier=10;
+        
+        if(!SetCommTimeouts(h_port, &timeouts)){
+                std::cerr << "Error setting timeouts!" << std::endl;
+                close_port();
+                return I_ERROR;
+        }
+        
+        h_overlapped = CreateEvent(0, true, false, 0);
+        
+        if (h_overlapped == INVALID_HANDLE_VALUE)
+        {
+                std::cerr << "Error creating event (1)!" << std::endl;
+                close_port();
+                return I_ERROR;
+        }
+        
+        h_overlapped_thread = CreateEvent(0, true, false, 0);
+        
+        if (h_overlapped_thread == INVALID_HANDLE_VALUE)
+        {
+                std::cerr << "Error creating event (2)!" << std::endl;
+                close_port();
+                return I_ERROR;
+        }
+        
+        #endif
+        
         launch_select_thread();
         
         std::cout << "Port opened." << std::endl;
@@ -350,15 +620,27 @@ int SerialInterface::open_port()
 
 int SerialInterface::close_port()
 {
-        if (port_fd != -1)
+        if (is_open())
         {
-                
+                #ifdef __unix__
                 
                 tcsetattr(port_fd, TCSANOW, &port_termios_saved);
                 tcflush(port_fd, TCOFLUSH);  
                 tcflush(port_fd, TCIFLUSH);
                 close(port_fd);
                 port_fd = -1;
+                
+                #elif defined _WIN32
+                
+                SetCommState(h_port, &dcb_serial_params_saved);
+                CloseHandle(h_port);
+                CloseHandle(h_overlapped);
+                CloseHandle(h_overlapped_thread);
+                h_port = INVALID_HANDLE_VALUE;
+                h_overlapped = INVALID_HANDLE_VALUE;
+                h_overlapped_thread = INVALID_HANDLE_VALUE;
+                
+                #endif
                 
                 std::cout << "Port closed." << std::endl;
                 
@@ -396,7 +678,15 @@ unsigned long SerialInterface::get_baud()
 
 bool SerialInterface::is_open()
 {
+        #ifdef __unix__
+        
         return (port_fd != -1);
+        
+        #elif defined _WIN32
+        
+        return (h_port != INVALID_HANDLE_VALUE);
+        
+        #endif
 }
 
 sigc::signal<void> SerialInterface::port_opened()
