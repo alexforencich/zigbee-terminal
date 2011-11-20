@@ -235,8 +235,6 @@ void SerialInterface::select_thread()
         
         #elif defined _WIN32
         
-        std::cout << "Thread start" << std::endl;
-        
         while (is_open())
         {
                 ResetEvent(h_overlapped_thread);
