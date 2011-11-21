@@ -135,8 +135,12 @@ void PortConfig::refresh_ports()
         {
                 row = *(cmbPort_tm->append());
                 row[cText.name] = *it;
+                
+                #ifdef __unix__
                 if (ind == -1 && (*it).find("ttyUSB") != std::string::npos)
                         ind = i;
+                #endif
+                
                 i++;
         }
         
