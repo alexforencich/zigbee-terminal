@@ -575,6 +575,9 @@ int SerialInterface::close_port()
 
 void SerialInterface::configure_port()
 {
+        if (!is_open())
+                return;
+        
         #ifdef __unix__
         
         port_termios.c_cflag = B19200;
