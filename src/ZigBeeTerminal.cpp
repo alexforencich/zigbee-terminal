@@ -164,7 +164,7 @@ void ZigBeeTerminal::on_port_receive_data()
         
         status = ser_int.read(buf, 64, num);
         
-        if (status == I_ERROR)
+        if (status == SI_ERROR)
         {
                 std::cout << "Read error!" << std::endl;
                 return;

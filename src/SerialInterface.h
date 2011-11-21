@@ -44,18 +44,18 @@
 #include <windows.h>
 #endif
 
-#define I_SUCCESS 0
-#define I_ERROR 1
-#define I_TIMEOUT 2
-#define I_PORT_NOT_OPEN 3
+#define SI_SUCCESS 0
+#define SI_ERROR 1
+#define SI_TIMEOUT 2
+#define SI_PORT_NOT_OPEN 3
 
-#define FLOW_NONE 0
-#define FLOW_HARDWARE 1
-#define FLOW_XON_XOFF 2
+#define SI_FLOW_NONE 0
+#define SI_FLOW_HARDWARE 1
+#define SI_FLOW_XON_XOFF 2
 
-#define PARITY_NONE 0
-#define PARITY_ODD 1
-#define PARITY_EVEN 2
+#define SI_PARITY_NONE 0
+#define SI_PARITY_ODD 1
+#define SI_PARITY_EVEN 2
 
 // class SerialInterface
 class SerialInterface
