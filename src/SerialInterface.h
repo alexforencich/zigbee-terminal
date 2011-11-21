@@ -82,6 +82,8 @@ public:
         int get_flow();
         int set_parity(int p);
         int get_parity();
+        int set_stop(int s);
+        int get_stop();
         
         bool set_debug(bool d);
         bool get_debug();
@@ -124,6 +126,7 @@ protected:
         int bits;
         int flow;
         int parity;
+        int stop;
         
         bool debug;
         

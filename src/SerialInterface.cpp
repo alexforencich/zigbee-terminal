@@ -177,6 +177,7 @@ SerialInterface::SerialInterface()
         bits = 8;
         flow = SI_FLOW_NONE;
         parity = SI_PARITY_NONE;
+        stop = 1;
         
         debug = false;
         
@@ -642,6 +643,16 @@ void SerialInterface::configure_port()
                         break;
         }
         
+        switch (stop)
+        {
+                case 1:
+                        // do nothing
+                        break;
+                case 2:
+                        port_termios.c_cflag |= CSTOPB;
+                        break;
+        }
+        
         port_termios.c_cflag |= CREAD;
         
         port_termios.c_iflag = IGNPAR | IGNBRK;
@@ -704,7 +715,15 @@ void SerialInterface::configure_port()
         
         dcb_serial_params.ByteSize = bits;
         
-        dcb_serial_params.StopBits = ONESTOPBIT;
+        switch (stop)
+        {
+                case 1:
+                        dcb_serial_params.StopBits = ONESTOPBIT;
+                        break;
+                case 2:
+                        dcb_serial_params.StopBits = TWOSTOPBITS;
+                        break;
+        }
         
         switch (parity)
         {
@@ -823,6 +842,21 @@ int SerialInterface::set_parity(int p)
 int SerialInterface::get_parity()
 {
         return parity;
+}
+
+int SerialInterface::set_stop(int s)
+{
+        if (s >= 1 && s <= 2)
+                stop = s;
+        
+        configure_port();
+        
+        return stop;
+}
+
+int SerialInterface::get_stop()
+{
+        return stop;
 }
 
 bool SerialInterface::set_debug(bool d)
