@@ -183,6 +183,8 @@ SerialInterface::SerialInterface()
         flow = SI_FLOW_NONE;
         parity = SI_PARITY_NONE;
         
+        debug = false;
+        
         running = false;
         
         signal_receive_data.connect( sigc::mem_fun(*this, &SerialInterface::on_receive_data) );
@@ -336,7 +338,7 @@ int SerialInterface::write(const char *buf, gsize count, gsize& bytes_written)
         
         #endif
         
-        if (bytes_written > 0)
+        if (debug && bytes_written > 0)
         {
                 std::cout << "Write: ";
                 for (gsize i = 0; i < bytes_written; i++)
@@ -408,7 +410,7 @@ int SerialInterface::read(char *buf, gsize count, gsize& bytes_read)
         
         #endif
         
-        if (bytes_read > 0)
+        if (debug && bytes_read > 0)
         {
                 std::cout << "Read: ";
                 for (gsize i = 0; i < bytes_read; i++)
@@ -524,7 +526,8 @@ int SerialInterface::open_port()
         
         launch_select_thread();
         
-        std::cout << "Port opened." << std::endl;
+        if (debug)
+                std::cout << "Port opened." << std::endl;
         
         m_port_opened.emit();
         
@@ -565,7 +568,8 @@ int SerialInterface::close_port()
                 
                 #endif
                 
-                std::cout << "Port closed." << std::endl;
+                if (debug)
+                        std::cout << "Port closed." << std::endl;
                 
                 m_port_closed.emit();
         }
@@ -821,6 +825,17 @@ int SerialInterface::set_parity(int p)
 int SerialInterface::get_parity()
 {
         return parity;
+}
+
+bool SerialInterface::set_debug(bool d)
+{
+        debug = d;
+        return debug;
+}
+
+bool SerialInterface::get_debug()
+{
+        return debug;
 }
 
 bool SerialInterface::is_open()

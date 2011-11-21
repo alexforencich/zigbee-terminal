@@ -83,6 +83,9 @@ public:
         int set_parity(int p);
         int get_parity();
         
+        bool set_debug(bool d);
+        bool get_debug();
+        
         static std::vector<std::string> enumerate_ports();
         
         sigc::signal<void> port_opened();
@@ -121,6 +124,8 @@ protected:
         int bits;
         int flow;
         int parity;
+        
+        bool debug;
         
         sigc::signal<void> m_port_opened;
         sigc::signal<void> m_port_closed;
