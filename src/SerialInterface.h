@@ -88,6 +88,8 @@ public:
         bool set_debug(bool d);
         bool get_debug();
         
+        Glib::ustring get_status_string();
+        
         static std::vector<std::string> enumerate_ports();
         
         sigc::signal<void> port_opened();

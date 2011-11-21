@@ -870,6 +870,49 @@ bool SerialInterface::get_debug()
         return debug;
 }
 
+Glib::ustring SerialInterface::get_status_string()
+{
+        Glib::ustring str;
+        
+        if (is_open())
+        {
+                str = port + ": ";
+                str += Glib::ustring::format(baud) + " ";
+                str += Glib::ustring::format(bits) + "-";
+                switch (parity)
+                {
+                        case SI_PARITY_NONE:
+                                str += "N-";
+                                break;
+                        case SI_PARITY_EVEN:
+                                str += "E-";
+                                break;
+                        case SI_PARITY_ODD:
+                                str += "O-";
+                                break;
+                }
+                str += Glib::ustring::format(stop) + " FLOW:";
+                switch (flow)
+                {
+                        case SI_FLOW_NONE:
+                                str += "NONE";
+                                break;
+                        case SI_FLOW_HARDWARE:
+                                str += "HW";
+                                break;
+                        case SI_FLOW_XON_XOFF:
+                                str += "SW";
+                                break;
+                }
+        }
+        else
+        {
+                str = "Not connected";
+        }
+        
+        return str;
+}
+
 bool SerialInterface::is_open()
 {
         #ifdef __unix__

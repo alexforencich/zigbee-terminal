@@ -145,14 +145,14 @@ void ZigBeeTerminal::on_port_open()
         baud = ser_int.get_baud();
         
         status.pop();
-        status.push(port + ": " + Glib::ustring::format(baud));
+        status.push(ser_int.get_status_string());
 }
 
 
 void ZigBeeTerminal::on_port_close()
 {
         status.pop();
-        status.push("Not connected");
+        status.push(ser_int.get_status_string());
 }
 
 
