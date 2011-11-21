@@ -177,7 +177,14 @@ SerialInterface::SerialInterface()
         
         #endif
         
-        baud = 0;
+        baud = 19200;
+        port = "";
+        bits = 8;
+        flow = 0;
+        parity = 0;
+        
+        running = false;
+        
         signal_receive_data.connect( sigc::mem_fun(*this, &SerialInterface::on_receive_data) );
 }
 
@@ -193,6 +200,7 @@ void SerialInterface::on_receive_data()
 
 void SerialInterface::launch_select_thread()
 {
+        running = true;
         Glib::Thread::create( sigc::mem_fun(*this, &SerialInterface::select_thread), false );
 }
 
@@ -204,7 +212,7 @@ void SerialInterface::select_thread()
         fd_set input;
         struct timeval timeout;
         
-        while (is_open())
+        while (running && is_open())
         {
                 FD_ZERO(&input);
                 FD_SET(port_fd, &input);
@@ -413,13 +421,8 @@ int SerialInterface::read(char *buf, gsize count, gsize& bytes_read)
 
 int SerialInterface::open_port()
 {
-        #ifdef __unix__
+        #ifdef _WIN32
         
-        struct termios t;
-        
-        #elif defined _WIN32
-        
-        DCB dcb_serial_params = {0};
         COMMTIMEOUTS timeouts = {0};
         
         #endif
@@ -451,57 +454,11 @@ int SerialInterface::open_port()
         
         #ifdef __unix__
         
-        tcgetattr(port_fd, &t);
-        memcpy(&port_termios_saved, &t, sizeof(struct termios));
+        tcgetattr(port_fd, &port_termios);
+        memcpy(&port_termios_saved, &port_termios, sizeof(struct termios));
         
-        switch (baud)
-        {
-                case 300:
-                        t.c_cflag = B300;
-                        break;
-                case 600:
-                        t.c_cflag = B600;
-                        break;
-                case 1200:
-                        t.c_cflag = B1200;
-                        break;
-                case 2400:
-                        t.c_cflag = B2400;
-                        break;
-                case 4800:
-                        t.c_cflag = B4800;
-                        break;
-                case 9600:
-                        t.c_cflag = B9600;
-                        break;
-                case 19200:
-                        t.c_cflag = B19200;
-                        break;
-                case 38400:
-                        t.c_cflag = B38400;
-                        break;
-                case 57600:
-                        t.c_cflag = B57600;
-                        break;
-                case 115200:
-                        t.c_cflag = B115200;
-                        break;
-        }
+        configure_port();
         
-        // 8 bits
-        t.c_cflag |= CS8;
-        
-        t.c_cflag |= CREAD;
-        
-        // no flow control
-        t.c_cflag |= CLOCAL;
-        
-        t.c_iflag = IGNPAR | IGNBRK;
-        t.c_oflag = 0;
-        t.c_lflag = 0;
-        t.c_cc[VTIME] = 0;
-        t.c_cc[VMIN] = 1;
-        tcsetattr(port_fd, TCSANOW, &t);
         tcflush(port_fd, TCOFLUSH);  
         tcflush(port_fd, TCIFLUSH);
         
@@ -514,7 +471,8 @@ int SerialInterface::open_port()
                 return I_ERROR;
         }
         
-        dcb_serial_params.DCBlength=sizeof(dcb_serial_params);
+        memset(&dcb_serial_params, 0, sizeof(DCB));
+        dcb_serial_params.DCBlength = sizeof(DCB);
         
         if (!GetCommState(h_port, &dcb_serial_params)) {
                 std::cerr << "Error getting state!" << std::endl;
@@ -524,50 +482,7 @@ int SerialInterface::open_port()
         
         memcpy(&dcb_serial_params_saved, &dcb_serial_params, sizeof(dcb_serial_params));
         
-        dcb_serial_params.BaudRate=CBR_19200;
-        switch (baud)
-        {
-                case 300:
-                        dcb_serial_params.BaudRate=CBR_300;
-                        break;
-                case 600:
-                        dcb_serial_params.BaudRate=CBR_600;
-                        break;
-                case 1200:
-                        dcb_serial_params.BaudRate=CBR_1200;
-                        break;
-                case 2400:
-                        dcb_serial_params.BaudRate=CBR_2400;
-                        break;
-                case 4800:
-                        dcb_serial_params.BaudRate=CBR_4800;
-                        break;
-                case 9600:
-                        dcb_serial_params.BaudRate=CBR_9600;
-                        break;
-                case 19200:
-                        dcb_serial_params.BaudRate=CBR_19200;
-                        break;
-                case 38400:
-                        dcb_serial_params.BaudRate=CBR_38400;
-                        break;
-                case 57600:
-                        dcb_serial_params.BaudRate=CBR_57600;
-                        break;
-                case 115200:
-                        dcb_serial_params.BaudRate=CBR_115200;
-                        break;
-        }
-        
-        dcb_serial_params.ByteSize=8;
-        dcb_serial_params.StopBits=ONESTOPBIT;
-        dcb_serial_params.Parity=NOPARITY;
-        
-        if(!SetCommState(h_port, &dcb_serial_params)){
-                std::cerr << "Error setting state!" << std::endl;
-                close_port();
-                return I_ERROR;
-        }
+        configure_port();
         
         if(!GetCommTimeouts(h_port, &timeouts)){
                 std::cerr << "Error getting timeouts!" << std::endl;
@@ -575,11 +490,11 @@ int SerialInterface::open_port()
                 return I_ERROR;
         }
         
-        timeouts.ReadIntervalTimeout=MAXDWORD;
-        timeouts.ReadTotalTimeoutConstant=0;
-        timeouts.ReadTotalTimeoutMultiplier=0;
-        //timeouts.WriteTotalTimeoutConstant=50;
-        //timeouts.WriteTotalTimeoutMultiplier=10;
+        timeouts.ReadIntervalTimeout = MAXDWORD;
+        timeouts.ReadTotalTimeoutConstant = 0;
+        timeouts.ReadTotalTimeoutMultiplier = 0;
+        //timeouts.WriteTotalTimeoutConstant = 50;
+        //timeouts.WriteTotalTimeoutMultiplier = 10;
         
         if(!SetCommTimeouts(h_port, &timeouts)){
                 std::cerr << "Error setting timeouts!" << std::endl;
@@ -620,6 +535,8 @@ int SerialInterface::close_port()
 {
         if (is_open())
         {
+                running = false;
+                
                 #ifdef __unix__
                 
                 tcsetattr(port_fd, TCSANOW, &port_termios_saved);
@@ -629,6 +546,14 @@ int SerialInterface::close_port()
                 port_fd = -1;
                 
                 #elif defined _WIN32
+                
+                // set event mask to cause thread to exit
+                if (!SetCommMask(h_port, EV_RXCHAR))
+                {
+                        std::cerr << "Error setting mask!" << std::endl;
+                        close_port();
+                        return I_ERROR;
+                }
                 
                 SetCommState(h_port, &dcb_serial_params_saved);
                 CloseHandle(h_port);
@@ -648,6 +573,187 @@ int SerialInterface::close_port()
         return I_SUCCESS;
 }
 
+void SerialInterface::configure_port()
+{
+        #ifdef __unix__
+        
+        port_termios.c_cflag = B19200;
+        switch (baud)
+        {
+                case 300:
+                        port_termios.c_cflag = B300;
+                        break;
+                case 600:
+                        port_termios.c_cflag = B600;
+                        break;
+                case 1200:
+                        port_termios.c_cflag = B1200;
+                        break;
+                case 2400:
+                        port_termios.c_cflag = B2400;
+                        break;
+                case 4800:
+                        port_termios.c_cflag = B4800;
+                        break;
+                case 9600:
+                        port_termios.c_cflag = B9600;
+                        break;
+                case 19200:
+                        port_termios.c_cflag = B19200;
+                        break;
+                case 38400:
+                        port_termios.c_cflag = B38400;
+                        break;
+                case 57600:
+                        port_termios.c_cflag = B57600;
+                        break;
+                case 115200:
+                        port_termios.c_cflag = B115200;
+                        break;
+        }
+        
+        switch (bits)
+        {
+                case 5:
+                        port_termios.c_cflag |= CS5;
+                        break;
+                case 6:
+                        port_termios.c_cflag |= CS6;
+                        break;
+                case 7:
+                        port_termios.c_cflag |= CS7;
+                        break;
+                case 8:
+                        port_termios.c_cflag |= CS8;
+                        break;
+        }
+        
+        switch (parity)
+        {
+                case PARITY_NONE:
+                        break;
+                case PARITY_ODD:
+                        port_termios.c_cflag |= PARODD | PARENB;
+                        break;
+                case PARITY_EVEN:
+                        port_termios.c_cflag |= PARENB;
+                        break;
+        }
+        
+        port_termios.c_cflag |= CREAD;
+        
+        port_termios.c_iflag = IGNPAR | IGNBRK;
+        
+        switch (flow)
+        {
+                case FLOW_NONE:
+                        port_termios.c_cflag |= CLOCAL;
+                        break;
+                case FLOW_HARDWARE:
+                        port_termios.c_cflag |= CRTSCTS;
+                        break;
+                case FLOW_XON_XOFF:
+                        port_termios.c_iflag |= IXON | IXOFF;
+                        break;
+        }
+        
+        port_termios.c_oflag = 0;
+        port_termios.c_lflag = 0;
+        port_termios.c_cc[VTIME] = 0;
+        port_termios.c_cc[VMIN] = 1;
+        tcsetattr(port_fd, TCSANOW, &port_termios);
+        
+        #elif defined _WIN32
+        
+        dcb_serial_params.BaudRate = CBR_19200;
+        switch (baud)
+        {
+                case 300:
+                        dcb_serial_params.BaudRate = CBR_300;
+                        break;
+                case 600:
+                        dcb_serial_params.BaudRate = CBR_600;
+                        break;
+                case 1200:
+                        dcb_serial_params.BaudRate = CBR_1200;
+                        break;
+                case 2400:
+                        dcb_serial_params.BaudRate = CBR_2400;
+                        break;
+                case 4800:
+                        dcb_serial_params.BaudRate = CBR_4800;
+                        break;
+                case 9600:
+                        dcb_serial_params.BaudRate = CBR_9600;
+                        break;
+                case 19200:
+                        dcb_serial_params.BaudRate = CBR_19200;
+                        break;
+                case 38400:
+                        dcb_serial_params.BaudRate = CBR_38400;
+                        break;
+                case 57600:
+                        dcb_serial_params.BaudRate = CBR_57600;
+                        break;
+                case 115200:
+                        dcb_serial_params.BaudRate = CBR_115200;
+                        break;
+        }
+        
+        dcb_serial_params.ByteSize = bits;
+        
+        dcb_serial_params.StopBits = ONESTOPBIT;
+        
+        switch (parity)
+        {
+                case PARITY_NONE:
+                        dcb_serial_params.Parity = NOPARITY;
+                        break;
+                case PARITY_ODD:
+                        dcb_serial_params.Parity = ODDPARITY;
+                        break;
+                case PARITY_EVEN:
+                        dcb_serial_params.Parity = EVENPARITY;
+                        break;
+        }
+        
+        switch (flow)
+        {
+                case FLOW_NONE:
+                        dcb_serial_params.fOutxCtsFlow = false;
+                        dcb_serial_params.fOutxDsrFlow = false;
+                        dcb_serial_params.fDtrControl = DTR_CONTROL_DISABLE;
+                        dcb_serial_params.fOutX = false;
+                        dcb_serial_params.fInX = false;
+                        dcb_serial_params.fRtsControl = DTR_CONTROL_DISABLE;
+                        break;
+                case FLOW_HARDWARE:
+                        dcb_serial_params.fOutxCtsFlow = true;
+                        dcb_serial_params.fOutxDsrFlow = true;
+                        dcb_serial_params.fDtrControl = DTR_CONTROL_HANDSHAKE;
+                        dcb_serial_params.fOutX = false;
+                        dcb_serial_params.fInX = false;
+                        dcb_serial_params.fRtsControl = DTR_CONTROL_HANDSHAKE;
+                        break;
+                case FLOW_XON_XOFF:
+                        dcb_serial_params.fOutxCtsFlow = false;
+                        dcb_serial_params.fOutxDsrFlow = false;
+                        dcb_serial_params.fDtrControl = DTR_CONTROL_DISABLE;
+                        dcb_serial_params.fOutX = true;
+                        dcb_serial_params.fInX = true;
+                        dcb_serial_params.fRtsControl = DTR_CONTROL_DISABLE;
+                        break;
+        }
+        
+        if(!SetCommState(h_port, &dcb_serial_params)){
+                std::cerr << "Error setting state!" << std::endl;
+                close_port();
+                return I_ERROR;
+        }
+        
+        #endif
+}
+
 Glib::ustring SerialInterface::set_port(Glib::ustring p)
 {
         if (!is_open())
@@ -663,8 +769,9 @@ Glib::ustring SerialInterface::get_port()
 
 unsigned long SerialInterface::set_baud(unsigned long b)
 {
-        if (!is_open())
-                baud = b;
+        baud = b;
+        
+        configure_port();
         
         return baud;
 }
@@ -672,6 +779,50 @@ unsigned long SerialInterface::set_baud(unsigned long b)
 unsigned long SerialInterface::get_baud()
 {
         return baud;
+}
+int SerialInterface::set_bits(int b)
+{
+        if (b >= 5 && b <= 8)
+                bits = b;
+        
+        configure_port();
+        
+        return bits;
+}
+
+int SerialInterface::get_bits()
+{
+        return bits;
+}
+
+int SerialInterface::set_flow(int f)
+{
+        if (f >= 0 && f <= 2)
+                flow = f;
+        
+        configure_port();
+        
+        return flow;
+}
+
+int SerialInterface::get_flow()
+{
+        return flow;
+}
+
+int SerialInterface::set_parity(int p)
+{
+        if (p >= 0 && p <= 2)
+                parity = p;
+        
+        configure_port();
+        
+        return parity;
+}
+
+int SerialInterface::get_parity()
+{
+        return parity;
 }
 
 bool SerialInterface::is_open()

@@ -146,8 +146,6 @@ void ZigBeeTerminal::on_port_open()
         
         status.pop();
         status.push(port + ": " + Glib::ustring::format(baud));
-        
-        ser_int.write("test", 4, num);
 }
 
 
