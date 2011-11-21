@@ -33,12 +33,11 @@
 
 #include "SerialInterface.h"
 
+#ifdef __unix__
+
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-
-#ifdef __unix__
-
 #include <sys/ioctl.h>
 #include <linux/serial.h>
 
