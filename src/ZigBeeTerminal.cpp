@@ -160,9 +160,9 @@ void ZigBeeTerminal::on_port_receive_data()
 {
         gsize num;
         int status;
-        static char buf[64];
+        static char buf[1024];
         
-        status = ser_int.read(buf, 64, num);
+        status = ser_int.read(buf, 1024, num);
         
         if (status == SI_ERROR)
         {
