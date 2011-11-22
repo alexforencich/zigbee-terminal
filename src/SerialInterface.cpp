@@ -193,13 +193,52 @@ SerialInterface::~SerialInterface()
 
 void SerialInterface::on_receive_data()
 {
+        {
+                Glib::Mutex::Lock lock(running_mutex);
+                if (!running)
+                        return;
+        }
+        
+        Glib::Mutex::Lock read_lock(read_mutex);
+        
         m_port_receive_data.emit();
+        
+        read_cond.signal();
 }
 
 void SerialInterface::launch_select_thread()
 {
         running = true;
-        Glib::Thread::create( sigc::mem_fun(*this, &SerialInterface::select_thread), false );
+        thread = Glib::Thread::create( sigc::mem_fun(*this, &SerialInterface::select_thread), true );
+}
+
+void SerialInterface::stop_select_thread()
+{
+        
+        {
+                Glib::Mutex::Lock lock(running_mutex);
+                running = false;
+        }
+        
+        read_cond.signal();
+        
+        #ifdef _WIN32
+                
+        // set event mask to cause thread to exit
+        if (!SetCommMask(h_port, EV_RXCHAR))
+        {
+                std::cerr << "Error setting mask!" << std::endl;
+                close_port();
+                return SI_ERROR;
+        }
+        
+        #endif
+        
+        if (thread)
+        {
+                thread->join();
+        }
+        thread = 0;
 }
 
 void SerialInterface::select_thread()
@@ -210,8 +249,18 @@ void SerialInterface::select_thread()
         fd_set input;
         struct timeval timeout;
         
-        while (running && is_open())
+        #endif
+        
+        while (is_open())
         {
+                {
+                        Glib::Mutex::Lock lock(running_mutex);
+                        if (!running)
+                                break;
+                }
+                
+                #ifdef __unix__
+                
                 FD_ZERO(&input);
                 FD_SET(port_fd, &input);
                 max_fd = port_fd + 1;
@@ -234,15 +283,21 @@ void SerialInterface::select_thread()
                 {
                         if (FD_ISSET(port_fd, &input))
                         {
+                                Glib::Mutex::Lock read_lock(read_mutex);
+                                
+                                {
+                                        Glib::Mutex::Lock lock(running_mutex);
+                                        if (!running)
+                                                break;
+                                }
+                                
                                 signal_receive_data.emit();
+                                read_cond.wait(read_mutex);
                         }
                 }
-        }
-        
-        #elif defined _WIN32
-        
-        while (is_open())
-        {
+                
+                #elif defined _WIN32
+                
                 ResetEvent(h_overlapped_thread);
                 
                 DWORD e_event = 0;
@@ -267,10 +322,22 @@ void SerialInterface::select_thread()
                 }
                 
                 if (e_event == EV_RXCHAR)
+                {
+                        Glib::Mutex::Lock read_lock(read_mutex);
+                        
+                        {
+                                Glib::Mutex::Lock lock(running_mutex);
+                                if (!running)
+                                        break;
+                        }
+                        
                         signal_receive_data.emit();
-        }
+                        read_cond.wait(read_mutex);
+                }
         
-        #endif
+                #endif
+                
+        }
 }
 
 int SerialInterface::write(const char *buf, gsize count, gsize& bytes_written)
@@ -534,25 +601,17 @@ int SerialInterface::close_port()
 {
         if (is_open())
         {
-                running = false;
+                stop_select_thread();
                 
                 #ifdef __unix__
                 
                 tcsetattr(port_fd, TCSANOW, &port_termios_saved);
-                tcflush(port_fd, TCOFLUSH);  
+                tcflush(port_fd, TCOFLUSH);
                 tcflush(port_fd, TCIFLUSH);
                 close(port_fd);
                 port_fd = -1;
                 
                 #elif defined _WIN32
-                
-                // set event mask to cause thread to exit
-                if (!SetCommMask(h_port, EV_RXCHAR))
-                {
-                        std::cerr << "Error setting mask!" << std::endl;
-                        close_port();
-                        return SI_ERROR;
-                }
                 
                 SetCommState(h_port, &dcb_serial_params_saved);
                 CloseHandle(h_port);

@@ -101,9 +101,11 @@ protected:
         void on_receive_data();
         void select_thread();
         void launch_select_thread();
+        void stop_select_thread();
         void configure_port();
         
-        sigc::signal<void> signal_receive_data;
+        //sigc::signal<void> signal_receive_data;
+        Glib::Dispatcher signal_receive_data;
         
         #ifdef __unix__
         
@@ -121,6 +123,10 @@ protected:
         
         #endif
         
+        Glib::Mutex running_mutex;
+        Glib::Mutex read_mutex;
+        Glib::Cond read_cond;
+        Glib::Thread *thread;
         bool running;
         
         Glib::ustring port;
