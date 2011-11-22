@@ -77,6 +77,19 @@ ZigBeeTerminal::ZigBeeTerminal()
         config_close_port_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_config_close_port_item_activate) );
         config_menu.append(config_close_port_item);
         
+        // Tabs
+        note.set_border_width(5);
+        vbox1.pack_start(note, true, true, 0);
+        
+        // Terminal tab
+        note.append_page(vbox_term, "Terminal");
+        
+        tv_term.set_size_request(400,200);
+        tv_term.modify_font(Pango::FontDescription("monospace"));
+        
+        sw_term.add(tv_term);
+        vbox_term.pack_start(sw_term, true, true, 0);
+        
         // status bar
         
         status.push("Not connected");
@@ -169,6 +182,20 @@ void ZigBeeTerminal::on_port_receive_data()
                 std::cout << "Read error!" << std::endl;
                 return;
         }
+        
+        Glib::ustring str;
+        for (int i = 0; i < num; i++)
+        {
+                if (buf[i] != 0)
+                        str += buf[i];
+        }
+        
+        Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
+        buffer->insert(buffer->end(), str);
+        
+        Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
+        tv_term.scroll_to(end_mark);
+        buffer->delete_mark(end_mark);
         
         std::cout << "Read " << num << " bytes: ";
         for (int i = 0; i < num; i++)

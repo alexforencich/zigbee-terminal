@@ -71,6 +71,12 @@ protected:
         Gtk::Menu config_menu;
         Gtk::ImageMenuItem config_port_item;
         Gtk::ImageMenuItem config_close_port_item;
+        // tabs
+        Gtk::Notebook note;
+        // terminal
+        Gtk::VBox vbox_term;
+        Gtk::ScrolledWindow sw_term;
+        Gtk::TextView tv_term;
         // status bar
         Gtk::Statusbar status;
         
