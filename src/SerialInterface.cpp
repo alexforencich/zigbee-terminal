@@ -229,7 +229,7 @@ void SerialInterface::stop_select_thread()
         {
                 std::cerr << "Error setting mask!" << std::endl;
                 close_port();
-                return SI_ERROR;
+                return;
         }
         
         #endif
