@@ -265,8 +265,8 @@ void SerialInterface::select_thread()
                 FD_SET(port_fd, &input);
                 max_fd = port_fd + 1;
                 
-                timeout.tv_sec = 1;
-                timeout.tv_usec = 0;
+                timeout.tv_sec = 0;
+                timeout.tv_usec = 100000;
                 
                 n = select(max_fd, &input, NULL, NULL, &timeout);
                 
