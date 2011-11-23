@@ -97,6 +97,11 @@ ZigBeeTerminal::ZigBeeTerminal()
         tv_term.set_editable(false);
         tv_term.signal_key_press_event().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_tv_key_press), false );
         
+        // tags
+        Glib::RefPtr<Gtk::TextBuffer::Tag> recv = tv_term.get_buffer()->create_tag("recv");
+        Glib::RefPtr<Gtk::TextBuffer::Tag> xmit = tv_term.get_buffer()->create_tag("xmit");
+        recv->property_weight() = PANGO_WEIGHT_BOLD;
+        
         sw_term.add(tv_term);
         vbox_term.pack_start(sw_term, true, true, 0);
         
@@ -183,6 +188,13 @@ bool ZigBeeTerminal::on_tv_key_press(GdkEventKey *key)
                 if (ser_int.is_open())
                 {
                         ser_int.write(str.c_str(), 1, num);
+                        
+                        Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
+                        buffer->insert_with_tag(buffer->end(), str, "xmit");
+                        
+                        Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
+                        tv_term.scroll_to(end_mark);
+                        buffer->delete_mark(end_mark);
                 }
         }
 }
@@ -231,7 +243,7 @@ void ZigBeeTerminal::on_port_receive_data()
         }
         
         Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
-        buffer->insert(buffer->end(), str);
+        buffer->insert_with_tag(buffer->end(), str, "recv");
         
         Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
         tv_term.scroll_to(end_mark);
