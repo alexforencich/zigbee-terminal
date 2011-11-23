@@ -77,6 +77,14 @@ ZigBeeTerminal::ZigBeeTerminal()
         config_close_port_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_config_close_port_item_activate) );
         config_menu.append(config_close_port_item);
         
+        config_menu.append(config_sep1);
+        
+        config_local_echo.set_label("Local Echo");
+        config_menu.append(config_local_echo);
+        
+        config_api_mode.set_label("Use API Mode");
+        config_menu.append(config_api_mode);
+        
         // Tabs
         note.set_border_width(5);
         vbox1.pack_start(note, true, true, 0);

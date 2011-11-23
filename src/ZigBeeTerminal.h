@@ -73,6 +73,9 @@ protected:
         Gtk::Menu config_menu;
         Gtk::ImageMenuItem config_port_item;
         Gtk::ImageMenuItem config_close_port_item;
+        Gtk::SeparatorMenuItem config_sep1;
+        Gtk::CheckMenuItem config_local_echo;
+        Gtk::CheckMenuItem config_api_mode;
         // tabs
         Gtk::Notebook note;
         // terminal
