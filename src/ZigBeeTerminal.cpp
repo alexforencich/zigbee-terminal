@@ -86,6 +86,8 @@ ZigBeeTerminal::ZigBeeTerminal()
         
         tv_term.set_size_request(400,200);
         tv_term.modify_font(Pango::FontDescription("monospace"));
+        tv_term.set_editable(false);
+        tv_term.signal_key_press_event().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_tv_key_press), false );
         
         sw_term.add(tv_term);
         vbox_term.pack_start(sw_term, true, true, 0);
@@ -145,6 +147,36 @@ void ZigBeeTerminal::on_config_port_item_activate()
 void ZigBeeTerminal::on_config_close_port_item_activate()
 {
         close_port();
+}
+
+
+bool ZigBeeTerminal::on_tv_key_press(GdkEventKey *key)
+{
+        guint u = gdk_keyval_to_unicode(key->keyval);
+        Glib::ustring str = "";
+        gsize num;
+        
+        if (u > 0)
+        {
+                str = Glib::ustring(1, u);
+        }
+        else
+        {
+                switch (key->keyval)
+                {
+                        case GDK_Return:
+                                str = "\n";
+                                break;
+                }
+        }
+        
+        if (str.length() > 0)
+        {
+                if (ser_int.is_open())
+                {
+                        ser_int.write(str.c_str(), 1, num);
+                }
+        }
 }
 
 

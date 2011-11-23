@@ -52,6 +52,8 @@ protected:
         void on_config_port_item_activate();
         void on_config_close_port_item_activate();
         
+        bool on_tv_key_press(GdkEventKey *key);
+        
         void on_port_open();
         void on_port_close();
         void on_port_receive_data();
