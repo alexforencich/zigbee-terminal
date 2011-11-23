@@ -82,6 +82,14 @@ protected:
         Gtk::VBox vbox_term;
         Gtk::ScrolledWindow sw_term;
         Gtk::TextView tv_term;
+        // raw log
+        Gtk::VBox vbox_raw_log;
+        Gtk::ScrolledWindow sw_raw_log;
+        Gtk::TextView tv_raw_log;
+        // packet log
+        Gtk::VBox vbox_pkt_log;
+        Gtk::ScrolledWindow sw_pkt_log;
+        Gtk::TreeView tv_pkt_log;
         // status bar
         Gtk::Statusbar status;
         

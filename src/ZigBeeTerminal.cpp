@@ -92,7 +92,7 @@ ZigBeeTerminal::ZigBeeTerminal()
         // Terminal tab
         note.append_page(vbox_term, "Terminal");
         
-        tv_term.set_size_request(400,200);
+        tv_term.set_size_request(400,400);
         tv_term.modify_font(Pango::FontDescription("monospace"));
         tv_term.set_editable(false);
         tv_term.signal_key_press_event().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_tv_key_press), false );
@@ -103,7 +103,24 @@ ZigBeeTerminal::ZigBeeTerminal()
         recv->property_weight() = PANGO_WEIGHT_BOLD;
         
         sw_term.add(tv_term);
+        sw_term.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
         vbox_term.pack_start(sw_term, true, true, 0);
+        
+        // Raw Log Tab
+        note.append_page(vbox_raw_log, "Raw Log");
+        tv_raw_log.modify_font(Pango::FontDescription("monospace"));
+        tv_raw_log.set_editable(false);
+        
+        sw_raw_log.add(tv_raw_log);
+        sw_raw_log.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+        vbox_raw_log.pack_start(sw_raw_log, true, true, 0);
+        
+        // Packet Log Tab
+        note.append_page(vbox_pkt_log, "Packet Log");
+        
+        sw_pkt_log.add(tv_pkt_log);
+        sw_pkt_log.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+        vbox_pkt_log.pack_start(sw_pkt_log, true, true, 0);
         
         // status bar
         
