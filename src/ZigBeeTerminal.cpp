@@ -206,12 +206,15 @@ bool ZigBeeTerminal::on_tv_key_press(GdkEventKey *key)
                 {
                         ser_int.write(str.c_str(), 1, num);
                         
-                        Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
-                        buffer->insert_with_tag(buffer->end(), str, "xmit");
-                        
-                        Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
-                        tv_term.scroll_to(end_mark);
-                        buffer->delete_mark(end_mark);
+                        if (config_local_echo.get_active())
+                        {
+                                Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
+                                buffer->insert_with_tag(buffer->end(), str, "xmit");
+                                
+                                Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
+                                tv_term.scroll_to(end_mark);
+                                buffer->delete_mark(end_mark);
+                        }
                 }
         }
 }
