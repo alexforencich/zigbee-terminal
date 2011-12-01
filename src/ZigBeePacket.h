@@ -312,6 +312,7 @@ public:
         int options_offset;
         int reserved_offset;
         int min_length;
+        int field_count;
         
         // addressing
         uint64_t dest64;

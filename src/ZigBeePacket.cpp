@@ -185,6 +185,7 @@ bool ZigBeePacket::set_offsets()
         data_offset = 0;
         route_records_offset = 0;
         min_length = 0;
+        field_count = 0;
         
         switch (identifier)
         {
@@ -193,12 +194,14 @@ bool ZigBeePacket::set_offsets()
                         at_cmd_offset = 2;
                         data_offset = 4;
                         min_length = 4;
+                        field_count = 4;
                         return true;
                 case ZBPID_ATCommandQueueRegisterValue:
                         frame_id_offset = 1;
                         at_cmd_offset = 2;
                         data_offset = 4;
                         min_length = 4;
+                        field_count = 4;
                         return true;
                 case ZBPID_TxRequest:
                         frame_id_offset = 1;
@@ -208,6 +211,7 @@ bool ZigBeePacket::set_offsets()
                         options_offset = 13;
                         data_offset = 14;
                         min_length = 14;
+                        field_count = 7;
                         return true;
                 case ZBPID_EATxRequest:
                         frame_id_offset = 1;
@@ -221,6 +225,7 @@ bool ZigBeePacket::set_offsets()
                         options_offset = 19;
                         data_offset = 20;
                         min_length = 20;
+                        field_count = 11;
                         return true;
                 case ZBPID_RemoteATCommand:
                         frame_id_offset = 1;
@@ -230,6 +235,7 @@ bool ZigBeePacket::set_offsets()
                         at_cmd_offset = 13;
                         data_offset = 15;
                         min_length = 15;
+                        field_count = 7;
                         return true;
                 case ZBPID_CreateSourceRoute:
                         frame_id_offset = 1;
@@ -238,6 +244,7 @@ bool ZigBeePacket::set_offsets()
                         options_offset = 12;
                         route_records_offset = 13;
                         min_length = 14;
+                        field_count = 6;
                         return true;
                 case ZBPID_RegisterJoiningDevice:
                         frame_id_offset = 1;
@@ -246,6 +253,7 @@ bool ZigBeePacket::set_offsets()
                         options_offset = 12;
                         data_offset = 13;
                         min_length = 13;
+                        field_count = 6;
                         return true;
                 case ZBPID_ATCommandResponse:
                         frame_id_offset = 1;
@@ -253,10 +261,12 @@ bool ZigBeePacket::set_offsets()
                         status_offset = 4;
                         data_offset = 5;
                         min_length = 5;
+                        field_count = 5;
                         return true;
                 case ZBPID_ModemStatus:
                         status_offset = 1;
                         min_length = 2;
+                        field_count = 2;
                         return true;
                 case ZBPID_TxStatus:
                         frame_id_offset = 1;
@@ -265,6 +275,7 @@ bool ZigBeePacket::set_offsets()
                         delivery_status_offset = 5;
                         discovery_status_offset = 6;
                         min_length = 7;
+                        field_count = 6;
                         return true;
                 case ZBPID_RxPacket:
                         src64_offset = 1;
@@ -272,6 +283,7 @@ bool ZigBeePacket::set_offsets()
                         options_offset = 11;
                         data_offset = 12;
                         min_length = 12;
+                        field_count = 5;
                         return true;
                 case ZBPID_EARxPacket:
                         src64_offset = 1;
@@ -283,6 +295,7 @@ bool ZigBeePacket::set_offsets()
                         options_offset = 17;
                         data_offset = 18;
                         min_length = 18;
+                        field_count = 9;
                         return true;
                 case ZBPID_IODataSampleRx:
                         // TODO
@@ -301,6 +314,7 @@ bool ZigBeePacket::set_offsets()
                         status_offset = 14;
                         data_offset = 15;
                         min_length = 15;
+                        field_count = 7;
                         return true;
                 case ZBPID_OTAFirmwareUpdateStatus:
                         // TODO
@@ -311,12 +325,14 @@ bool ZigBeePacket::set_offsets()
                         options_offset = 11;
                         route_records_offset = 12;
                         min_length = 13;
+                        field_count = 5;
                         return true;
                 case ZBPID_DeviceAuthenticated:
                         src64_offset = 1;
                         src16_offset = 9;
                         status_offset = 11;
                         min_length = 12;
+                        field_count = 4;
                         return true;
                 case ZBPID_ManyToOneRouteRequest:
                         frame_id_offset = 1;
@@ -324,11 +340,13 @@ bool ZigBeePacket::set_offsets()
                         src16_offset = 10;
                         reserved_offset = 12;
                         min_length = 13;
+                        field_count = 5;
                         return true;
                 case ZBPID_RegisterJoiningDeviceStatus:
                         frame_id_offset = 1;
                         status_offset = 2;
                         min_length = 3;
+                        field_count = 3;
                         return true;
                 case ZBPID_JoinNotificationStatus:
                         // TODO
