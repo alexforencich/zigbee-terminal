@@ -38,8 +38,9 @@
 
 #include "PortConfig.h"
 #include "SerialInterface.h"
+#include "ZigBeePacket.h"
 
-// Template class
+// ZigBeeTerminal class
 class ZigBeeTerminal : public Gtk::Window
 {
 public:
@@ -54,12 +55,34 @@ protected:
         
         bool on_tv_key_press(GdkEventKey *key);
         
+        void on_tv_pkt_log_cursor_changed();
+        
         void on_port_open();
         void on_port_close();
         void on_port_receive_data();
         
+        void on_receive_data();
+        
         void open_port();
         void close_port();
+        
+        // Tree model columns
+        class PacketLogModel : public Gtk::TreeModel::ColumnRecord
+        {
+        public:
+                PacketLogModel()
+                { add(Packet); add(Direction); add(Type); add(Size); add(Data); }
+                
+                Gtk::TreeModelColumn<ZigBeePacket> Packet;
+                Gtk::TreeModelColumn<Glib::ustring> Direction;
+                Gtk::TreeModelColumn<Glib::ustring> Type;
+                Gtk::TreeModelColumn<int> Size;
+                Gtk::TreeModelColumn<Glib::ustring> Data;
+        };
+        
+        PacketLogModel cPacketLogModel;
+        
+        Glib::RefPtr<Gtk::ListStore> tv_pkt_log_tm;
         
         //Child widgets:
         // window
@@ -87,9 +110,12 @@ protected:
         Gtk::ScrolledWindow sw_raw_log;
         Gtk::TextView tv_raw_log;
         // packet log
-        Gtk::VBox vbox_pkt_log;
+        Gtk::VPaned vpane_pkt_log;
+        //Gtk::VBox vbox_pkt_log;
         Gtk::ScrolledWindow sw_pkt_log;
         Gtk::TreeView tv_pkt_log;
+        Gtk::ScrolledWindow sw2_pkt_log;
+        Gtk::TextView tv2_pkt_log;
         // status bar
         Gtk::Statusbar status;
         
@@ -99,6 +125,8 @@ protected:
         unsigned long baud;
         
         SerialInterface ser_int;
+        
+        std::deque<char> read_data_queue;
         
 };
 
