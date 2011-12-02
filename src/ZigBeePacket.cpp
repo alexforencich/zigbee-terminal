@@ -125,12 +125,14 @@ bool ZigBeePacket::read_packet(uint8_t *bytes, size_t count, size_t &bytes_read)
         // find packet start byte
         while ((*(ptr++) != 0x7e) & (n++ < count)) { }
         
+        // start of packet offset
+        // to discard junk ahead of incomplete packet
+        // (assuming packet is currently truncated)
+        bytes_read = n-1;
+        
         // return if out of buffer
         if (n > count)
-        {
-                bytes_read = count;
                 return false;
-        }
         
         // return if not enough bytes left
         if (count - n < 3)
