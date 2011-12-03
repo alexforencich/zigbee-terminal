@@ -154,6 +154,7 @@ ZigBeeTerminal::ZigBeeTerminal()
         vpane_pkt_log.pack2(sw2_pkt_log, false, false);
         
         // Packet Builder Tab
+        pkt_builder.set_border_width(5);
         note.append_page(pkt_builder, "Packet Builder");
         
         // status bar

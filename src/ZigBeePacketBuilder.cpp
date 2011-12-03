@@ -43,6 +43,27 @@
 
 ZigBeePacketBuilder::ZigBeePacketBuilder()
 {
+        tbl.resize(1, 2);
+        tbl.set_col_spacings(10);
+        tbl.set_row_spacings(5);
+        pack_start(tbl, false, false, 0);
+        
+        label_type.set_label("Type:");
+        tbl.attach(label_type, 0, 1, 0, 1);
+        
+        std::vector<int> lst = ZigBeePacket::get_valid_identifiers();
+        
+        for (int i = 0; i < lst.size(); i++)
+        {
+                std::stringstream ss;
+                ss << ZigBeePacket::get_type_desc(lst[i]);
+                ss << " (0x" << std::setfill('0') << std::setw(2) << std::hex << lst[i] << ")";
+                cmbt_type.append(ss.str());
+        }
+        
+        cmbt_type.set_active(0);
+        
+        tbl.attach(cmbt_type, 1, 2, 0, 1);
         
 }
 

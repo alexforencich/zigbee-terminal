@@ -49,6 +49,10 @@ protected:
         //Signal handlers:
         
         //Child widgets:
+        Gtk::Table tbl;
+        Gtk::Label label_type;
+        Gtk::ComboBoxText cmbt_type;
+        
         
         
 };
