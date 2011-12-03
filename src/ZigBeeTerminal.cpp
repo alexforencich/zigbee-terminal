@@ -342,28 +342,35 @@ void ZigBeeTerminal::on_port_receive_data()
         int status;
         static char buf[1024];
         
-        status = ser_int.read(buf, 1024, num);
-        
-        if (status == SerialInterface::SS_Error)
+        do
         {
-                std::cout << "Read error!" << std::endl;
-                return;
-        }
-        
-        Glib::ustring str;
-        for (int i = 0; i < num; i++)
-        {
-                read_data_queue.push_back(buf[i]);
-                if (buf[i] != 0)
+                status = ser_int.read(buf, 1024, num);
+                
+                if (status == SerialInterface::SS_Error)
+                {
+                        std::cout << "Read error!" << std::endl;
+                        return;
+                }
+                
+                std::cout << "Read " << num << " bytes" << std::endl;
+                
+                Glib::ustring str;
+                for (int i = 0; i < num; i++)
+                {
+                        read_data_queue.push_back(buf[i]);
                         str += buf[i];
+                }
+                
+                Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
+                buffer->insert_with_tag(buffer->end(), str, "recv");
+                
+                Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
+                tv_term.scroll_to(end_mark);
+                buffer->delete_mark(end_mark);
         }
+        while (num == 1024);
         
-        Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
-        buffer->insert_with_tag(buffer->end(), str, "recv");
-        
-        Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
-        tv_term.scroll_to(end_mark);
-        buffer->delete_mark(end_mark);
+        on_receive_data();
         
         //std::cout << "Read " << num << " bytes: ";
         //for (int i = 0; i < num; i++)
@@ -376,25 +383,35 @@ void ZigBeeTerminal::on_receive_data()
         ZigBeePacket pkt;
         size_t len;
         
-        do
+        if (config_api_mode.get_active())
         {
-                len = 0;
-                if (pkt.read_packet(read_data_queue, len))
+                
+                do
                 {
-                        pkt.decode_packet();
-                        
-                        Gtk::TreeModel::Row row = *(tv_pkt_log_tm->append());
-                        row[cPacketLogModel.Packet] = pkt;
-                        row[cPacketLogModel.Direction] = "RX";
-                        row[cPacketLogModel.Type] = pkt.get_type_desc();
-                        row[cPacketLogModel.Size] = pkt.get_length();
-                        row[cPacketLogModel.Data] = pkt.get_hex_packet();
-                        std::cout << "RX packet: " << pkt.get_hex_packet() << std::endl;
+                        len = 0;
+                        std::cout << "Read Packet (" << read_data_queue.size() << ")" << std::endl;
+                        if (pkt.read_packet(read_data_queue, len))
+                        {
+                                std::cout << "Decode Packet" << std::endl;
+                                pkt.decode_packet();
+                                
+                                Gtk::TreeModel::Row row = *(tv_pkt_log_tm->append());
+                                row[cPacketLogModel.Packet] = pkt;
+                                row[cPacketLogModel.Direction] = "RX";
+                                row[cPacketLogModel.Type] = pkt.get_type_desc();
+                                row[cPacketLogModel.Size] = pkt.get_length();
+                                row[cPacketLogModel.Data] = pkt.get_hex_packet();
+                                std::cout << "RX packet: " << pkt.get_hex_packet() << std::endl;
+                        }
+                        for (int i = 0; i < len; i++)
+                                read_data_queue.pop_front();
+                        std::cout << "Read complete (" << len << ")" << std::endl;
                 }
-                for (int i = 0; i < len; i++)
-                        read_data_queue.pop_front();
+                while (read_data_queue.size() > 0 && len > 0);
+                
         }
-        while (len > 0);
+        
+        std::cout << "Done" << std::endl;
 }
 
 
