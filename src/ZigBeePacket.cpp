@@ -36,6 +36,128 @@
 #include <sstream>
 #include <iomanip>
 
+// Static
+bool ZigBeePacket::is_valid_identifier(int identifier)
+{
+        switch (identifier)
+        {
+                case ZBPID_ATCommand:
+                        return true;
+                case ZBPID_ATCommandQueueRegisterValue:
+                        return true;
+                case ZBPID_TxRequest:
+                        return true;
+                case ZBPID_EATxRequest:
+                        return true;
+                case ZBPID_RemoteATCommand:
+                        return true;
+                case ZBPID_CreateSourceRoute:
+                        return true;
+                case ZBPID_RegisterJoiningDevice:
+                        return true;
+                case ZBPID_ATCommandResponse:
+                        return true;
+                case ZBPID_ModemStatus:
+                        return true;
+                case ZBPID_TxStatus:
+                        return true;
+                case ZBPID_RxPacket:
+                        return true;
+                case ZBPID_EARxPacket:
+                        return true;
+                case ZBPID_IODataSampleRx:
+                        return true;
+                case ZBPID_SensorRead:
+                        return true;
+                case ZBPID_NodeIdentification:
+                        return true;
+                case ZBPID_RemoteCommandResponse:
+                        return true;
+                case ZBPID_OTAFirmwareUpdateStatus:
+                        return true;
+                case ZBPID_RouteRecord:
+                        return true;
+                case ZBPID_DeviceAuthenticated:
+                        return true;
+                case ZBPID_ManyToOneRouteRequest:
+                        return true;
+                case ZBPID_RegisterJoiningDeviceStatus:
+                        return true;
+                case ZBPID_JoinNotificationStatus:
+                        return true;
+                default:
+                        return false;
+        }
+}
+
+// Static
+std::vector<int> ZigBeePacket::get_valid_identifiers()
+{
+        std::vector<int> ids;
+        
+        for (int i = 0; i < 255; i++)
+        {
+                if (is_valid_identifier(i))
+                        ids.push_back(i);
+        }
+        
+        return ids;
+}
+
+// Static
+std::string ZigBeePacket::get_type_desc(int identifier)
+{
+        switch (identifier)
+        {
+                case ZBPID_ATCommand:
+                        return "AT Command";
+                case ZBPID_ATCommandQueueRegisterValue:
+                        return "AT Command Queue Register Value";
+                case ZBPID_TxRequest:
+                        return "Transmit Request";
+                case ZBPID_EATxRequest:
+                        return "Explicit Addressing Transmit Request";
+                case ZBPID_RemoteATCommand:
+                        return "Remote AT Command";
+                case ZBPID_CreateSourceRoute:
+                        return "Create Source Route";
+                case ZBPID_RegisterJoiningDevice:
+                        return "Register Joining Device";
+                case ZBPID_ATCommandResponse:
+                        return "AT Command Response";
+                case ZBPID_ModemStatus:
+                        return "Modem Status";
+                case ZBPID_TxStatus:
+                        return "Transmit Status";
+                case ZBPID_RxPacket:
+                        return "Receive Packet";
+                case ZBPID_EARxPacket:
+                        return "Explicit Addressing Receive Packet";
+                case ZBPID_IODataSampleRx:
+                        return "IO Data Sample RX";
+                case ZBPID_SensorRead:
+                        return "Sensor Read";
+                case ZBPID_NodeIdentification:
+                        return "Node Identification";
+                case ZBPID_RemoteCommandResponse:
+                        return "Remote AT Command Response";
+                case ZBPID_OTAFirmwareUpdateStatus:
+                        return "Over-the-Air Firmware Update Status";
+                case ZBPID_RouteRecord:
+                        return "Route Record";
+                case ZBPID_DeviceAuthenticated:
+                        return "Device Authenticated";
+                case ZBPID_ManyToOneRouteRequest:
+                        return "Many To One Route Request";
+                case ZBPID_RegisterJoiningDeviceStatus:
+                        return "Register Joining Device Status";
+                case ZBPID_JoinNotificationStatus:
+                        return "Join Notification Status";
+                default:
+                        return "Unknown";
+        }
+}
+
 uint16_t ZigBeePacket::get_length()
 {
         return payload.size()+4;
@@ -656,55 +778,7 @@ bool ZigBeePacket::decode_packet()
 
 std::string ZigBeePacket::get_type_desc()
 {
-        switch (identifier)
-        {
-                case ZBPID_ATCommand:
-                        return "AT Command";
-                case ZBPID_ATCommandQueueRegisterValue:
-                        return "AT Command Queue Register Value";
-                case ZBPID_TxRequest:
-                        return "Transmit Request";
-                case ZBPID_EATxRequest:
-                        return "Explicit Addressing Transmit Request";
-                case ZBPID_RemoteATCommand:
-                        return "Remote AT Command";
-                case ZBPID_CreateSourceRoute:
-                        return "Create Source Route";
-                case ZBPID_RegisterJoiningDevice:
-                        return "Register Joining Device";
-                case ZBPID_ATCommandResponse:
-                        return "AT Command Response";
-                case ZBPID_ModemStatus:
-                        return "Modem Status";
-                case ZBPID_TxStatus:
-                        return "Transmit Status";
-                case ZBPID_RxPacket:
-                        return "Receive Packet";
-                case ZBPID_EARxPacket:
-                        return "Explicit Addressing Receive Packet";
-                case ZBPID_IODataSampleRx:
-                        return "IO Data Sample RX";
-                case ZBPID_SensorRead:
-                        return "Sensor Read";
-                case ZBPID_NodeIdentification:
-                        return "Node Identification";
-                case ZBPID_RemoteCommandResponse:
-                        return "Remote AT Command Response";
-                case ZBPID_OTAFirmwareUpdateStatus:
-                        return "Over-the-Air Firmware Update Status";
-                case ZBPID_RouteRecord:
-                        return "Route Record";
-                case ZBPID_DeviceAuthenticated:
-                        return "Device Authenticated";
-                case ZBPID_ManyToOneRouteRequest:
-                        return "Many To One Route Request";
-                case ZBPID_RegisterJoiningDeviceStatus:
-                        return "Register Joining Device Status";
-                case ZBPID_JoinNotificationStatus:
-                        return "Join Notification Status";
-                default:
-                        return "Unknown";
-        }
+        return get_type_desc(identifier);
 }
 
 std::string ZigBeePacket::get_desc()
@@ -852,6 +926,8 @@ std::string ZigBeePacket::get_hex_packet()
         
         return out.str();
 }
+
+
 
 
 

@@ -375,6 +375,10 @@ public:
         std::string get_desc();
         std::string get_hex_packet();
         
+        static bool is_valid_identifier(int identifier);
+        static std::vector<int> get_valid_identifiers();
+        static std::string get_type_desc(int identifier);
+        
 protected:
 };
 
