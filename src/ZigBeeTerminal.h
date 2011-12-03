@@ -92,6 +92,10 @@ protected:
         Gtk::MenuItem file_menu_item;
         Gtk::Menu file_menu;
         Gtk::ImageMenuItem file_quit_item;
+        Gtk::MenuItem view_menu_item;
+        Gtk::Menu view_menu;
+        Gtk::CheckMenuItem view_hex_terminal;
+        Gtk::CheckMenuItem view_hex_log;
         Gtk::MenuItem config_menu_item;
         Gtk::Menu config_menu;
         Gtk::ImageMenuItem config_port_item;

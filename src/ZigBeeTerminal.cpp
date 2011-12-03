@@ -63,6 +63,18 @@ ZigBeeTerminal::ZigBeeTerminal()
         file_quit_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_file_quit_item_activate) );
         file_menu.append(file_quit_item);
         
+        view_menu_item.set_label("_View");
+        view_menu_item.set_use_underline(true);
+        main_menu.append(view_menu_item);
+        
+        view_menu_item.set_submenu(view_menu);
+        
+        view_hex_terminal.set_label("Hex Terminal");
+        view_menu.append(view_hex_terminal);
+        
+        view_hex_log.set_label("Hex Log");
+        view_menu.append(view_hex_log);
+        
         config_menu_item.set_label("_Config");
         config_menu_item.set_use_underline(true);
         main_menu.append(config_menu_item);
