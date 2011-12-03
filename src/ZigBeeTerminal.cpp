@@ -153,6 +153,9 @@ ZigBeeTerminal::ZigBeeTerminal()
         sw2_pkt_log.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
         vpane_pkt_log.pack2(sw2_pkt_log, false, false);
         
+        // Packet Builder Tab
+        note.append_page(pkt_builder, "Packet Builder");
+        
         // status bar
         
         status.push("Not connected");

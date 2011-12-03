@@ -39,6 +39,7 @@
 #include "PortConfig.h"
 #include "SerialInterface.h"
 #include "ZigBeePacket.h"
+#include "ZigBeePacketBuilder.h"
 
 // ZigBeeTerminal class
 class ZigBeeTerminal : public Gtk::Window
@@ -120,6 +121,8 @@ protected:
         Gtk::TreeView tv_pkt_log;
         Gtk::ScrolledWindow sw2_pkt_log;
         Gtk::TextView tv2_pkt_log;
+        // packet builder
+        ZigBeePacketBuilder pkt_builder;
         // status bar
         Gtk::Statusbar status;
         
