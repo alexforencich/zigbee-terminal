@@ -328,8 +328,11 @@ void ZigBeeTerminal::on_tv_pkt_log_cursor_changed()
 {
         Gtk::TreeModel::iterator it = tv_pkt_log.get_selection()->get_selected();
         Gtk::TreeModel::Row row = *it;
+        ZigBeePacket pkt = (ZigBeePacket)row[cPacketLogModel.Packet];
         
-        tv2_pkt_log.get_buffer()->set_text(((ZigBeePacket)row[cPacketLogModel.Packet]).get_desc());
+        tv2_pkt_log.get_buffer()->set_text(pkt.get_desc());
+        
+        pkt_builder.set_packet(pkt);
 }
 
 

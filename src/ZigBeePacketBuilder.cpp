@@ -41,36 +41,599 @@
 #include <string>
 #include <vector>
 
+using namespace std::tr1;
+
 ZigBeePacketBuilder::ZigBeePacketBuilder()
 {
-        tbl.resize(1, 2);
+        identifier_list = ZigBeePacket::get_valid_identifiers();
+        
+        current_identifier = -1;
+        
+        tbl.resize(2, 2);
         tbl.set_col_spacings(10);
         tbl.set_row_spacings(5);
         pack_start(tbl, false, false, 0);
         
         label_type.set_label("Type:");
+        label_type.set_size_request(120, -1);
         tbl.attach(label_type, 0, 1, 0, 1);
         
-        std::vector<int> lst = ZigBeePacket::get_valid_identifiers();
-        
-        for (int i = 0; i < lst.size(); i++)
+        for (int i = 0; i < identifier_list.size(); i++)
         {
+        int row = 2;
                 std::stringstream ss;
-                ss << ZigBeePacket::get_type_desc(lst[i]);
-                ss << " (0x" << std::setfill('0') << std::setw(2) << std::hex << lst[i] << ")";
+                ss << ZigBeePacket::get_type_desc(identifier_list[i]);
+                ss << " (0x" << std::setfill('0') << std::setw(2) << std::hex << identifier_list[i] << ")";
                 cmbt_type.append(ss.str());
         }
         
+        cmbt_type.signal_changed().connect( sigc::mem_fun(*this, &ZigBeePacketBuilder::on_type_change) );
         cmbt_type.set_active(0);
         
         tbl.attach(cmbt_type, 1, 2, 0, 1);
+        
+        label_identifier.set_label("Identifier:");
+        tbl.attach(label_identifier, 0, 1, 1, 2);
+        
+        ent_identifier.set_editable(false);
+        tbl.attach(ent_identifier, 1, 2, 1, 2);
+        
+        tv_data.set_wrap_mode(Gtk::WRAP_WORD_CHAR);
+        sw_data.add(tv_data);
+        sw_data.set_shadow_type(Gtk::SHADOW_ETCHED_IN);
+        sw_data.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+        
+        hex_data.set_label("Hex");
+        al_hex_data.add(hex_data);
+        al_hex_data.set(Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0);
         
 }
 
 
 ZigBeePacketBuilder::~ZigBeePacketBuilder()
 {
+        labels.clear();
+        fields.clear();
+}
+
+
+void ZigBeePacketBuilder::on_type_change()
+{
+        pkt.identifier = ZigBeePacket::ZBP_Identifier(identifier_list[cmbt_type.get_active_row_number()]);
         
+        read_packet();
+}
+
+void ZigBeePacketBuilder::read_packet()
+{
+        int row;
+        std::stringstream ss;
+        
+        if (pkt.identifier != current_identifier)
+        {
+                row = 2;
+                
+                current_identifier = pkt.identifier;
+                
+                ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << pkt.identifier;
+                ent_identifier.set_text(ss.str());
+                
+                labels.clear();
+                fields.clear();
+                if (sw_data.get_parent())
+                {
+                        tbl.remove(sw_data);
+                        tbl.remove(al_hex_data);
+                }
+                tbl.resize(3, 2);
+                
+                if (!pkt.set_offsets())
+                        return;
+                
+                tbl.resize(pkt.field_count+1, 2);
+                
+                for (int i = 1; i <= pkt.min_length; i++)
+                {
+                        if (pkt.frame_id_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Frame ID:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.at_cmd_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("AT Command:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.status_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Status:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.options_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Options:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.dest64_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Dest 64:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.dest16_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Dest 16:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.src64_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Source 64:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.src16_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Source 16:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.src_ep_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Source EP:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.dest_ep_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Dest EP:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.cluster_id_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Cluster ID:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.profile_id_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Profile ID:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.radius_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Radius:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.transmit_retries_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Transmit Retries:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.delivery_status_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Delivery Status:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.discovery_status_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Discovery Status:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.digital_mask_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Digital Mask:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.analog_mask_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Analog Mask:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.data_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Data:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                tbl.attach(al_hex_data, 0, 1, row+1, row+2);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                tbl.attach(sw_data, 1, 2, row, row+2);
+                                
+                                row += 2;
+                        }
+                        
+                        if (pkt.route_records_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Route Records:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                }
+                
+        }
+        
+        row = 0;
+        
+        for (int i = 1; i <= pkt.min_length; i++)
+        {
+                if (pkt.frame_id_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.frame_id;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.at_cmd_offset == i)
+                {
+                        ss.str("");
+                        ss << pkt.at_cmd[0] << pkt.at_cmd[1];
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.status_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.status;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.options_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.options;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.dest64_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(16) << std::hex << pkt.dest64;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.dest16_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.dest16;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.src64_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(16) << std::hex << pkt.src64;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.src16_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.src16;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.src_ep_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.src_ep;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.dest_ep_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.dest_ep;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.cluster_id_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.cluster_id;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.profile_id_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.profile_id;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.radius_offset == i)
+                {
+                        ss.str("");
+                        ss << std::dec << (int)pkt.radius;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.transmit_retries_offset == i)
+                {
+                        ss.str("");
+                        ss << std::dec << (int)pkt.transmit_retries;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.delivery_status_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.delivery_status;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.discovery_status_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.discovery_status;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.digital_mask_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.digital_mask;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.analog_mask_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.analog_mask;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.data_offset == i)
+                {
+                        ss.str("");
+                        for (int j = 0; j < pkt.data.size(); j++)
+                        {
+                                if (j > 0)
+                                        ss << " ";
+                                ss << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.data[j];
+                        }
+                        tv_data.get_buffer()->set_text(ss.str());
+                        
+                        row += 2;
+                }
+                
+                if (pkt.route_records_offset == i)
+                {
+                        ss.str("");
+                        for (int j = 0; j < pkt.route_records.size(); j++)
+                        {
+                                if (j > 0)
+                                        ss << " ";
+                                ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.route_records[j];
+                        }
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+        }
+        
+}
+
+void ZigBeePacketBuilder::set_packet(ZigBeePacket p)
+{
+        pkt = p;
+        
+        for (int i = 0; i < identifier_list.size(); i++)
+        {
+                if (pkt.identifier == identifier_list[i])
+                {
+                        cmbt_type.set_active(i);
+                        break;
+                }
+        }
+}
+
+ZigBeePacket ZigBeePacketBuilder::get_packet()
+{
+        return pkt;
 }
 
 

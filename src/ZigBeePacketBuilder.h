@@ -35,6 +35,7 @@
 #define __ZIGBEE_PACKET_BUILDER_H
 
 #include <gtkmm.h>
+#include <tr1/memory>
 
 #include "ZigBeePacket.h"
 
@@ -45,15 +46,34 @@ public:
         ZigBeePacketBuilder();
         virtual ~ZigBeePacketBuilder();
         
+        void read_packet();
+        
+        void set_packet(ZigBeePacket p);
+        ZigBeePacket get_packet();
+        
 protected:
         //Signal handlers:
+        void on_type_change();
         
         //Child widgets:
         Gtk::Table tbl;
         Gtk::Label label_type;
         Gtk::ComboBoxText cmbt_type;
+        Gtk::Label label_identifier;
+        Gtk::Entry ent_identifier;
+        Gtk::ScrolledWindow sw_data;
+        Gtk::TextView tv_data;
+        Gtk::Alignment al_hex_data;
+        Gtk::CheckButton hex_data;
         
+        std::vector< std::tr1::shared_ptr< Gtk::Label > > labels;
+        std::vector< std::tr1::shared_ptr< Gtk::Entry > > fields;
         
+        std::vector<int> identifier_list;
+        
+        int current_identifier;
+        
+        ZigBeePacket pkt;
         
 };
 
