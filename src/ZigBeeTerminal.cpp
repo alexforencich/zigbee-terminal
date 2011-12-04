@@ -107,6 +107,7 @@ ZigBeeTerminal::ZigBeeTerminal()
         tv_term.set_size_request(400,400);
         tv_term.modify_font(Pango::FontDescription("monospace"));
         tv_term.set_editable(false);
+        tv_term.set_wrap_mode(Gtk::WRAP_WORD_CHAR);
         tv_term.signal_key_press_event().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_tv_key_press), false );
         
         // tags
@@ -122,6 +123,7 @@ ZigBeeTerminal::ZigBeeTerminal()
         note.append_page(vbox_raw_log, "Raw Log");
         tv_raw_log.modify_font(Pango::FontDescription("monospace"));
         tv_raw_log.set_editable(false);
+        tv_raw_log.set_wrap_mode(Gtk::WRAP_WORD_CHAR);
         
         sw_raw_log.add(tv_raw_log);
         sw_raw_log.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
