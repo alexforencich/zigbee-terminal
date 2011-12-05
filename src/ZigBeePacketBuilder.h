@@ -51,6 +51,8 @@ public:
         void set_packet(ZigBeePacket p);
         ZigBeePacket get_packet();
         
+        sigc::signal<void> signal_changed();
+        
 protected:
         //Signal handlers:
         void on_type_change();
@@ -59,6 +61,7 @@ protected:
         void on_data_change();
         void on_hex_data_toggle();
         
+        void update_packet();
         void update_data();
         
         unsigned long parse_number(Glib::ustring str);
@@ -84,6 +87,8 @@ protected:
         bool updating_fields;
         
         ZigBeePacket pkt;
+        
+        sigc::signal<void> m_signal_changed;
         
 };
 

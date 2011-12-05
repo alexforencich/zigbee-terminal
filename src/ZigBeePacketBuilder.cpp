@@ -224,7 +224,7 @@ void ZigBeePacketBuilder::on_field_change(int offset, int index)
                 row++;
         }*/
         
-        pkt.build_packet();
+        update_packet();
 }
 
 void ZigBeePacketBuilder::on_data_change()
@@ -248,12 +248,19 @@ void ZigBeePacketBuilder::on_data_change()
                 }
         }
         
-        pkt.build_packet();
+        update_packet();
 }
 
 void ZigBeePacketBuilder::on_hex_data_toggle()
 {
         update_data();
+}
+
+void ZigBeePacketBuilder::update_packet()
+{
+        pkt.build_packet();
+        
+        m_signal_changed.emit();
 }
 
 void ZigBeePacketBuilder::update_data()
@@ -324,7 +331,7 @@ void ZigBeePacketBuilder::read_packet()
                 if (!pkt.set_offsets())
                         return;
                 
-                pkt.decode_packet();
+                pkt.build_packet();
                 
                 tbl.resize(pkt.field_count+1, 2);
                 
@@ -828,6 +835,7 @@ void ZigBeePacketBuilder::read_packet()
         
         updating_fields = false;
         
+        m_signal_changed.emit();
 }
 
 void ZigBeePacketBuilder::set_packet(ZigBeePacket p)
@@ -848,6 +856,11 @@ void ZigBeePacketBuilder::set_packet(ZigBeePacket p)
 ZigBeePacket ZigBeePacketBuilder::get_packet()
 {
         return pkt;
+}
+
+sigc::signal<void> ZigBeePacketBuilder::signal_changed()
+{
+        return m_signal_changed;
 }
 
 
