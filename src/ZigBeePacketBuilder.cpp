@@ -238,13 +238,32 @@ void ZigBeePacketBuilder::on_data_change()
         
         if (hex_data.get_active())
         {
-                
+                for (int i = 0; i < str.size(); i++)
+                {
+                        char ch = tolower(str[i]);
+                        uint8_t b;
+                        
+                        if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f'))
+                        {
+                                b = ch >= 'a' ? ch - 'a' + 10 : ch - '0';
+                                
+                                ch = tolower(str[i+1]);
+                                if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f'))
+                                {
+                                        b <<= 4;
+                                        b |= ch >= 'a' ? ch - 'a' + 10 : ch - '0';
+                                        i++;
+                                }
+                                
+                                pkt.data.push_back(b);
+                        }
+                }
         }
         else
         {
-                for (int j = 0; j < str.size(); j++)
+                for (int i = 0; i < str.size(); i++)
                 {
-                        pkt.data.push_back(str[j]);
+                        pkt.data.push_back(str[i]);
                 }
         }
         
