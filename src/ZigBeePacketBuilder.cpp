@@ -283,7 +283,7 @@ void ZigBeePacketBuilder::update_data()
         
         updating_fields = true;
         
-        tv_data.get_buffer()->set_text(ss.str());
+        tv_data.get_buffer()->set_text(Glib::convert(ss.str(), "utf-8", "iso-8859-1"));
         
         updating_fields = false;
 }
