@@ -158,12 +158,26 @@ ZigBeeTerminal::ZigBeeTerminal()
         
         // Packet Builder Tab
         note.append_page(vbox_pkt_builder, "Packet Builder");
-        vbox_pkt_builder.set_border_width(5);
+        
+        vbox_pkt_builder.pack_start(vpane_pkt_builder, true, true, 0);
         
         pkt_builder.set_border_width(5);
-        vbox_pkt_builder.pack_start(pkt_builder, true, true, 0);
+        pkt_builder.signal_changed().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_pkt_builder_change) );
+        //vbox_pkt_builder.pack_start(pkt_builder, true, true, 0);
+        sw_pkt_builder.add(pkt_builder);
+        sw_pkt_builder.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
+        vpane_pkt_builder.pack1(sw_pkt_builder, true, true);
+        
+        tv_pkt_builder.modify_font(Pango::FontDescription("monospace"));
+        tv_pkt_builder.set_editable(false);
+        tv_pkt_builder.set_wrap_mode(Gtk::WRAP_WORD_CHAR);
+        
+        sw2_pkt_builder.add(tv_pkt_builder);
+        sw2_pkt_builder.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+        vpane_pkt_builder.pack2(sw2_pkt_builder, false, false);
         
         bbox_pkt_builder.set_layout(Gtk::BUTTONBOX_SPREAD);
+        bbox_pkt_builder.set_border_width(5);
         vbox_pkt_builder.pack_start(bbox_pkt_builder, false, false, 0);
         
         btn_pkt_builder_send.set_label("Send Packet");
@@ -344,6 +358,12 @@ void ZigBeeTerminal::on_tv_pkt_log_cursor_changed()
         tv2_pkt_log.get_buffer()->set_text(pkt.get_desc());
         
         pkt_builder.set_packet(pkt);
+}
+
+
+void ZigBeeTerminal::on_pkt_builder_change()
+{
+        tv_pkt_builder.get_buffer()->set_text(pkt_builder.get_packet().get_hex_packet());
 }
 
 

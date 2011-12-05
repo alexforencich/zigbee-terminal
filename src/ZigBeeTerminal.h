@@ -58,6 +58,7 @@ protected:
         
         void on_tv_pkt_log_cursor_changed();
         
+        void on_pkt_builder_change();
         void on_btn_pkt_builder_send_click();
         
         void on_port_open();
@@ -125,9 +126,13 @@ protected:
         Gtk::TextView tv2_pkt_log;
         // packet builder
         Gtk::VBox vbox_pkt_builder;
+        Gtk::VPaned vpane_pkt_builder;
         Gtk::HButtonBox bbox_pkt_builder;
         Gtk::Button btn_pkt_builder_send;
+        Gtk::ScrolledWindow sw_pkt_builder;
         ZigBeePacketBuilder pkt_builder;
+        Gtk::ScrolledWindow sw2_pkt_builder;
+        Gtk::TextView tv_pkt_builder;
         // status bar
         Gtk::Statusbar status;
         
