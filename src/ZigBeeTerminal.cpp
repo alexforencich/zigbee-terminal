@@ -150,6 +150,7 @@ ZigBeeTerminal::ZigBeeTerminal()
         tv2_pkt_log.set_size_request(400,100);
         tv2_pkt_log.modify_font(Pango::FontDescription("monospace"));
         tv2_pkt_log.set_editable(false);
+        tv2_pkt_log.set_wrap_mode(Gtk::WRAP_WORD_CHAR);
         
         sw2_pkt_log.add(tv2_pkt_log);
         sw2_pkt_log.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
