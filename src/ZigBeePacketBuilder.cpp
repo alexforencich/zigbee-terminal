@@ -232,7 +232,23 @@ void ZigBeePacketBuilder::on_data_change()
         if (updating_fields)
                 return;
         
+        pkt.data.clear();
         
+        Glib::ustring str = tv_data.get_buffer()->get_text();
+        
+        if (hex_data.get_active())
+        {
+                
+        }
+        else
+        {
+                for (int j = 0; j < str.size(); j++)
+                {
+                        pkt.data.push_back(str[j]);
+                }
+        }
+        
+        pkt.build_packet();
 }
 
 void ZigBeePacketBuilder::on_hex_data_toggle()
@@ -823,6 +839,7 @@ void ZigBeePacketBuilder::set_packet(ZigBeePacket p)
                 if (pkt.identifier == identifier_list[i])
                 {
                         cmbt_type.set_active(i);
+                        read_packet();
                         break;
                 }
         }
