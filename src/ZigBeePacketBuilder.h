@@ -55,6 +55,14 @@ protected:
         //Signal handlers:
         void on_type_change();
         
+        void on_field_change(int offset, int index);
+        void on_data_change();
+        void on_hex_data_toggle();
+        
+        void update_data();
+        
+        unsigned long parse_number(Glib::ustring str);
+        
         //Child widgets:
         Gtk::Table tbl;
         Gtk::Label label_type;
@@ -72,6 +80,8 @@ protected:
         std::vector<int> identifier_list;
         
         int current_identifier;
+        
+        bool updating_fields;
         
         ZigBeePacket pkt;
         

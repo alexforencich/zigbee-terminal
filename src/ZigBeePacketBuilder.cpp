@@ -49,6 +49,8 @@ ZigBeePacketBuilder::ZigBeePacketBuilder()
         
         current_identifier = -1;
         
+        updating_fields = false;
+        
         tbl.resize(2, 2);
         tbl.set_col_spacings(10);
         tbl.set_row_spacings(5);
@@ -79,11 +81,14 @@ ZigBeePacketBuilder::ZigBeePacketBuilder()
         tbl.attach(ent_identifier, 1, 2, 1, 2);
         
         tv_data.set_wrap_mode(Gtk::WRAP_WORD_CHAR);
+        tv_data.get_buffer()->signal_changed().connect( sigc::mem_fun(*this, &ZigBeePacketBuilder::on_data_change) );
         sw_data.add(tv_data);
         sw_data.set_shadow_type(Gtk::SHADOW_ETCHED_IN);
         sw_data.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
         
         hex_data.set_label("Hex");
+        hex_data.set_active(true);
+        hex_data.signal_toggled().connect( sigc::mem_fun(*this, &ZigBeePacketBuilder::on_hex_data_toggle) );
         al_hex_data.add(hex_data);
         al_hex_data.set(Gtk::ALIGN_CENTER, Gtk::ALIGN_CENTER, 0, 0);
         
@@ -102,6 +107,179 @@ void ZigBeePacketBuilder::on_type_change()
         pkt.identifier = ZigBeePacket::ZBP_Identifier(identifier_list[cmbt_type.get_active_row_number()]);
         
         read_packet();
+}
+
+void ZigBeePacketBuilder::on_field_change(int offset, int index)
+{
+        if (updating_fields)
+                return;
+        
+        if (pkt.frame_id_offset == offset)
+        {
+                pkt.frame_id = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.at_cmd_offset == offset)
+        {
+                Glib::ustring str = fields[index]->get_text();
+                pkt.at_cmd[0] = ' ';
+                pkt.at_cmd[1] = ' ';
+                if (str.size() > 0)
+                        pkt.at_cmd[0] = str[0];
+                if (str.size() > 1)
+                        pkt.at_cmd[1] = str[1];
+        }
+        
+        if (pkt.status_offset == offset)
+        {
+                pkt.status = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.options_offset == offset)
+        {
+                pkt.options = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.dest64_offset == offset)
+        {
+                pkt.dest64 = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.dest16_offset == offset)
+        {
+                pkt.dest16 = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.src64_offset == offset)
+        {
+                pkt.src64 = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.src16_offset == offset)
+        {
+                pkt.src16 = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.src_ep_offset == offset)
+        {
+                pkt.src_ep = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.dest_ep_offset == offset)
+        {
+                pkt.dest_ep = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.cluster_id_offset == offset)
+        {
+                pkt.cluster_id = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.profile_id_offset == offset)
+        {
+                pkt.profile_id = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.radius_offset == offset)
+        {
+                pkt.radius = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.transmit_retries_offset == offset)
+        {
+                pkt.transmit_retries = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.delivery_status_offset == offset)
+        {
+                pkt.delivery_status = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.discovery_status_offset == offset)
+        {
+                pkt.discovery_status = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.digital_mask_offset == offset)
+        {
+                pkt.digital_mask = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.analog_mask_offset == offset)
+        {
+                pkt.analog_mask = parse_number(fields[index]->get_text());
+        }
+        
+        /*if (pkt.route_records_offset == offset)
+        {
+                ss.str("");
+                for (int j = 0; j < pkt.route_records.size(); j++)
+                {
+                        if (j > 0)
+                                ss << " ";
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.route_records[j];
+                }
+                fields[row]->set_text(ss.str());
+                
+                row++;
+        }*/
+        
+        pkt.build_packet();
+}
+
+void ZigBeePacketBuilder::on_data_change()
+{
+        if (updating_fields)
+                return;
+        
+        
+}
+
+void ZigBeePacketBuilder::on_hex_data_toggle()
+{
+        update_data();
+}
+
+void ZigBeePacketBuilder::update_data()
+{
+        std::stringstream ss;
+        
+        for (int j = 0; j < pkt.data.size(); j++)
+        {
+                if (hex_data.get_active())
+                {
+                        if (j > 0)
+                                ss << " ";
+                        ss << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.data[j];
+                }
+                else
+                {
+                        ss << pkt.data[j];
+                }
+        }
+        
+        updating_fields = true;
+        
+        tv_data.get_buffer()->set_text(ss.str());
+        
+        updating_fields = false;
+}
+
+unsigned long ZigBeePacketBuilder::parse_number(Glib::ustring str)
+{
+        unsigned long l = 0;
+        size_t n = str.find("0x");
+        
+        if (n != std::string::npos)
+        {
+                l = std::strtol(str.substr(n).c_str(), 0, 16);
+        }
+        else
+        {
+                l = std::strtol(str.c_str(), 0, 10);
+        }
+        
+        return l;
 }
 
 void ZigBeePacketBuilder::read_packet()
@@ -130,6 +308,8 @@ void ZigBeePacketBuilder::read_packet()
                 if (!pkt.set_offsets())
                         return;
                 
+                pkt.decode_packet();
+                
                 tbl.resize(pkt.field_count+1, 2);
                 
                 for (int i = 1; i <= pkt.min_length; i++)
@@ -142,6 +322,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -156,6 +337,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -170,6 +352,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -184,6 +367,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -198,6 +382,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -212,6 +397,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -226,6 +412,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -240,6 +427,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -254,6 +442,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -268,6 +457,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -282,6 +472,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -296,6 +487,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -310,6 +502,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -324,6 +517,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -338,6 +532,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -352,6 +547,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -366,6 +562,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -380,6 +577,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -409,6 +607,7 @@ void ZigBeePacketBuilder::read_packet()
                                 tbl.attach(*labels.back(), 0, 1, row, row+1);
                                 
                                 fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
                                 fields.back()->set_visible(true);
                                 tbl.attach(*fields.back(), 1, 2, row, row+1);
                                 
@@ -420,6 +619,8 @@ void ZigBeePacketBuilder::read_packet()
         }
         
         row = 0;
+        
+        updating_fields = true;
         
         for (int i = 1; i <= pkt.min_length; i++)
         {
@@ -587,14 +788,8 @@ void ZigBeePacketBuilder::read_packet()
                 
                 if (pkt.data_offset == i)
                 {
-                        ss.str("");
-                        for (int j = 0; j < pkt.data.size(); j++)
-                        {
-                                if (j > 0)
-                                        ss << " ";
-                                ss << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.data[j];
-                        }
-                        tv_data.get_buffer()->set_text(ss.str());
+                        update_data();
+                        updating_fields = true;
                         
                         row += 2;
                 }
@@ -614,6 +809,8 @@ void ZigBeePacketBuilder::read_packet()
                 }
                 
         }
+        
+        updating_fields = false;
         
 }
 
