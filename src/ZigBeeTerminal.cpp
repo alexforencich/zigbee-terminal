@@ -156,8 +156,18 @@ ZigBeeTerminal::ZigBeeTerminal()
         vpane_pkt_log.pack2(sw2_pkt_log, false, false);
         
         // Packet Builder Tab
+        note.append_page(vbox_pkt_builder, "Packet Builder");
+        vbox_pkt_builder.set_border_width(5);
+        
         pkt_builder.set_border_width(5);
-        note.append_page(pkt_builder, "Packet Builder");
+        vbox_pkt_builder.pack_start(pkt_builder, true, true, 0);
+        
+        bbox_pkt_builder.set_layout(Gtk::BUTTONBOX_SPREAD);
+        vbox_pkt_builder.pack_start(bbox_pkt_builder, false, false, 0);
+        
+        btn_pkt_builder_send.set_label("Send Packet");
+        btn_pkt_builder_send.signal_clicked().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_btn_pkt_builder_send_click) );
+        bbox_pkt_builder.add(btn_pkt_builder_send);
         
         // status bar
         
@@ -333,6 +343,23 @@ void ZigBeeTerminal::on_tv_pkt_log_cursor_changed()
         tv2_pkt_log.get_buffer()->set_text(pkt.get_desc());
         
         pkt_builder.set_packet(pkt);
+}
+
+
+void ZigBeeTerminal::on_btn_pkt_builder_send_click()
+{
+        ZigBeePacket pkt = pkt_builder.get_packet();
+        
+        Gtk::TreeModel::Row row;
+        
+        row = *(tv_pkt_log_tm->append());
+        row[cPacketLogModel.Packet] = pkt;
+        row[cPacketLogModel.Direction] = "TX";
+        row[cPacketLogModel.Type] = pkt.get_type_desc();
+        row[cPacketLogModel.Size] = pkt.get_length();
+        row[cPacketLogModel.Data] = pkt.get_hex_packet();
+        
+        // write it here...
 }
 
 
