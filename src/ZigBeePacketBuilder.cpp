@@ -210,19 +210,23 @@ void ZigBeePacketBuilder::on_field_change(int offset, int index)
                 pkt.analog_mask = parse_number(fields[index]->get_text());
         }
         
-        /*if (pkt.route_records_offset == offset)
+        if (pkt.route_records_offset == offset)
         {
-                ss.str("");
-                for (int j = 0; j < pkt.route_records.size(); j++)
-                {
-                        if (j > 0)
-                                ss << " ";
-                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.route_records[j];
-                }
-                fields[row]->set_text(ss.str());
+                pkt.route_records.clear();
                 
-                row++;
-        }*/
+                Glib::ustring str = fields[index]->get_text();
+                
+                for (int i = 0; i < str.size(); i++)
+                {
+                        int k, num;
+                        
+                        if (sscanf(str.c_str()+i, "%4x%n", &k, &num) > 0)
+                        {
+                                i += num-1;
+                                pkt.route_records.push_back(k);
+                        }
+                }
+        }
         
         update_packet();
 }
