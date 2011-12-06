@@ -616,7 +616,7 @@ bool ZigBeePacket::build_packet()
         
         if (route_records_offset)
         {
-                payload.insert(payload.begin()+1, route_records.size()*2, 0);
+                payload.insert(payload.begin()+route_records_offset, route_records.size()*2, 0);
                 
                 payload[route_records_offset] = route_records.size();
                 
