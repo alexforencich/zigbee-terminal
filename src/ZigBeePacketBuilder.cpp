@@ -240,21 +240,13 @@ void ZigBeePacketBuilder::on_data_change()
         {
                 for (int i = 0; i < str.size(); i++)
                 {
-                        char ch = tolower(str[i]);
+                        int k, num;
                         uint8_t b;
                         
-                        if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f'))
+                        if (sscanf(str.c_str()+i, "%2x%n", &k, &num) > 0)
                         {
-                                b = ch >= 'a' ? ch - 'a' + 10 : ch - '0';
-                                
-                                ch = tolower(str[i+1]);
-                                if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f'))
-                                {
-                                        b <<= 4;
-                                        b |= ch >= 'a' ? ch - 'a' + 10 : ch - '0';
-                                        i++;
-                                }
-                                
+                                i += num-1;
+                                b = k;
                                 pkt.data.push_back(b);
                         }
                 }
