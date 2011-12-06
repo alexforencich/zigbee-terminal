@@ -201,7 +201,7 @@ public:
                 uint8_t num_samples;
                 uint16_t digital_mask;
                 uint8_t analog_mask;
-                uint8_t sample;
+                uint8_t sample[];
         } __attribute__ ((__packed__));
         
         struct sZBP_SensorRead
@@ -323,6 +323,16 @@ public:
         int src64_offset;
         uint16_t src16;
         int src16_offset;
+        uint64_t sender64;
+        int sender64_offset;
+        uint16_t sender16;
+        int sender16_offset;
+        uint16_t parent16;
+        int parent16_offset;
+        uint64_t new64;
+        int new64_offset;
+        uint16_t new16;
+        int new16_offset;
         
         // explicit addressing
         uint8_t src_ep;
@@ -349,6 +359,8 @@ public:
         int digital_mask_offset;
         uint8_t analog_mask;
         int analog_mask_offset;
+        uint8_t num_samples;
+        int num_samples_offset;
         
         // packet data (rf, at, etc.)
         std::vector<uint8_t> data;

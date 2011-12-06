@@ -303,6 +303,11 @@ bool ZigBeePacket::set_offsets()
         dest16_offset = 0;
         src64_offset = 0;
         src16_offset = 0;
+        sender64_offset = 0;
+        sender16_offset = 0;
+        parent16_offset = 0;
+        new64_offset = 0;
+        new16_offset = 0;
         src_ep_offset = 0;
         dest_ep_offset = 0;
         cluster_id_offset = 0;
@@ -314,6 +319,7 @@ bool ZigBeePacket::set_offsets()
         digital_mask_offset = 0;
         analog_mask_offset = 0;
         data_offset = 0;
+        num_samples_offset = 0;
         route_records_offset = 0;
         min_length = 0;
         field_count = 0;
@@ -429,14 +435,36 @@ bool ZigBeePacket::set_offsets()
                         field_count = 9;
                         return true;
                 case ZBPID_IODataSampleRx:
+                        src64_offset = 1;
+                        src16_offset = 9;
+                        options_offset = 11;
+                        num_samples_offset = 12;
+                        digital_mask_offset = 13;
+                        analog_mask_offset = 15;
                         // TODO
-                        return false;
+                        data_offset = 16;
+                        min_length = 16;
+                        field_count = 8;
+                        return true;
                 case ZBPID_SensorRead:
+                        src64_offset = 1;
+                        src16_offset = 9;
+                        options_offset = 11;
                         // TODO
-                        return false;
+                        data_offset = 12;
+                        min_length = 12;
+                        field_count = 5;
+                        return true;
                 case ZBPID_NodeIdentification:
-                        // TODO
-                        return false;
+                        sender64_offset = 1;
+                        sender16_offset = 9;
+                        options_offset = 11;
+                        src64_offset = 12;
+                        src16_offset = 20;
+                        data_offset = 21;
+                        min_length = 21;
+                        field_count = 7;
+                        return true;
                 case ZBPID_RemoteCommandResponse:
                         frame_id_offset = 1;
                         src64_offset = 2;
@@ -448,8 +476,14 @@ bool ZigBeePacket::set_offsets()
                         field_count = 7;
                         return true;
                 case ZBPID_OTAFirmwareUpdateStatus:
+                        src64_offset = 1;
+                        dest16_offset = 9;
+                        options_offset = 11;
                         // TODO
-                        return false;
+                        data_offset = 12;
+                        min_length = 12;
+                        field_count = 5;
+                        return true;
                 case ZBPID_RouteRecord:
                         src64_offset = 1;
                         src16_offset = 9;
@@ -480,8 +514,13 @@ bool ZigBeePacket::set_offsets()
                         field_count = 3;
                         return true;
                 case ZBPID_JoinNotificationStatus:
-                        // TODO
-                        return false;
+                        parent16_offset = 1;
+                        new16_offset = 3;
+                        new64_offset = 5;
+                        status_offset = 13;
+                        min_length = 14;
+                        field_count = 5;
+                        return true;
                 default:
                         return false;
         }
@@ -556,6 +595,48 @@ bool ZigBeePacket::build_packet()
                 payload[src16_offset+1] = src16;
         }
         
+        if (sender64_offset)
+        {
+                payload[sender64_offset]   = sender64 >> 56;
+                payload[sender64_offset+1] = sender64 >> 48;
+                payload[sender64_offset+2] = sender64 >> 40;
+                payload[sender64_offset+3] = sender64 >> 32;
+                payload[sender64_offset+4] = sender64 >> 24;
+                payload[sender64_offset+5] = sender64 >> 16;
+                payload[sender64_offset+6] = sender64 >> 8;
+                payload[sender64_offset+7] = sender64;
+        }
+        
+        if (sender16_offset)
+        {
+                payload[sender16_offset]   = sender16 >> 8;
+                payload[sender16_offset+1] = sender16;
+        }
+        
+        if (parent16_offset)
+        {
+                payload[parent16_offset]   = parent16 >> 8;
+                payload[parent16_offset+1] = parent16;
+        }
+        
+        if (new64_offset)
+        {
+                payload[new64_offset]   = new64 >> 56;
+                payload[new64_offset+1] = new64 >> 48;
+                payload[new64_offset+2] = new64 >> 40;
+                payload[new64_offset+3] = new64 >> 32;
+                payload[new64_offset+4] = new64 >> 24;
+                payload[new64_offset+5] = new64 >> 16;
+                payload[new64_offset+6] = new64 >> 8;
+                payload[new64_offset+7] = new64;
+        }
+        
+        if (new16_offset)
+        {
+                payload[new16_offset]   = new16 >> 8;
+                payload[new16_offset+1] = new16;
+        }
+        
         if (src_ep_offset)
         {
                 payload[src_ep_offset] = src_ep;
@@ -607,6 +688,11 @@ bool ZigBeePacket::build_packet()
         if (analog_mask_offset)
         {
                 payload[analog_mask_offset] = analog_mask;
+        }
+        
+        if (num_samples_offset)
+        {
+                payload[num_samples_offset] = num_samples;
         }
         
         if (data_offset)
@@ -704,6 +790,48 @@ bool ZigBeePacket::decode_packet()
                 src16 |= (uint16_t)payload[src16_offset+1];
         }
         
+        if (sender64_offset)
+        {
+                sender64  = (uint64_t)payload[sender64_offset]   << 56;
+                sender64 |= (uint64_t)payload[sender64_offset+1] << 48;
+                sender64 |= (uint64_t)payload[sender64_offset+2] << 40;
+                sender64 |= (uint64_t)payload[sender64_offset+3] << 32;
+                sender64 |= (uint64_t)payload[sender64_offset+4] << 24;
+                sender64 |= (uint64_t)payload[sender64_offset+5] << 16;
+                sender64 |= (uint64_t)payload[sender64_offset+6] << 8;
+                sender64 |= (uint64_t)payload[sender64_offset+7];
+        }
+        
+        if (sender16_offset)
+        {
+                sender16  = (uint16_t)payload[sender16_offset] << 8;
+                sender16 |= (uint16_t)payload[sender16_offset+1];
+        }
+        
+        if (parent16_offset)
+        {
+                parent16  = (uint16_t)payload[parent16_offset] << 8;
+                parent16 |= (uint16_t)payload[parent16_offset+1];
+        }
+        
+        if (new64_offset)
+        {
+                new64  = (uint64_t)payload[new64_offset]   << 56;
+                new64 |= (uint64_t)payload[new64_offset+1] << 48;
+                new64 |= (uint64_t)payload[new64_offset+2] << 40;
+                new64 |= (uint64_t)payload[new64_offset+3] << 32;
+                new64 |= (uint64_t)payload[new64_offset+4] << 24;
+                new64 |= (uint64_t)payload[new64_offset+5] << 16;
+                new64 |= (uint64_t)payload[new64_offset+6] << 8;
+                new64 |= (uint64_t)payload[new64_offset+7];
+        }
+        
+        if (new16_offset)
+        {
+                new16  = (uint16_t)payload[new16_offset] << 8;
+                new16 |= (uint16_t)payload[new16_offset+1];
+        }
+        
         if (src_ep_offset)
         {
                 src_ep = payload[src_ep_offset];
@@ -755,6 +883,11 @@ bool ZigBeePacket::decode_packet()
         if (analog_mask_offset)
         {
                 analog_mask = payload[analog_mask_offset];
+        }
+        
+        if (num_samples_offset)
+        {
+                num_samples = payload[num_samples_offset];
         }
         
         if (data_offset)
@@ -832,6 +965,31 @@ std::string ZigBeePacket::get_desc()
                         desc << "  Src16: 0x" << std::setfill('0') << std::setw(4) << std::hex << src16 << std::endl;
                 }
                 
+                if (sender64_offset == i)
+                {
+                        desc << "  Sender64: 0x" << std::setfill('0') << std::setw(16) << std::hex << sender64 << std::endl;
+                }
+                
+                if (sender16_offset == i)
+                {
+                        desc << "  Sender16: 0x" << std::setfill('0') << std::setw(4) << std::hex << sender16 << std::endl;
+                }
+                
+                if (parent16_offset == i)
+                {
+                        desc << "  Parent16: 0x" << std::setfill('0') << std::setw(4) << std::hex << parent16 << std::endl;
+                }
+                
+                if (new64_offset == i)
+                {
+                        desc << "  New64: 0x" << std::setfill('0') << std::setw(16) << std::hex << new64 << std::endl;
+                }
+                
+                if (new16_offset == i)
+                {
+                        desc << "  New16: 0x" << std::setfill('0') << std::setw(4) << std::hex << new16 << std::endl;
+                }
+                
                 if (src_ep_offset == i)
                 {
                         desc << "  Source Endpoint: 0x" << std::setfill('0') << std::setw(2) << std::hex << (int)src_ep << std::endl;
@@ -880,6 +1038,11 @@ std::string ZigBeePacket::get_desc()
                 if (analog_mask_offset == i)
                 {
                         desc << "  Analog Mask: 0x" << std::setfill('0') << std::setw(2) << std::hex << (int)analog_mask << std::endl;
+                }
+                
+                if (num_samples_offset == i)
+                {
+                        desc << "  Samples: " << std::dec << (int)num_samples << std::endl;
                 }
                 
                 if (data_offset == i)
