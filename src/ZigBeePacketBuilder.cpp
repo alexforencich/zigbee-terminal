@@ -160,6 +160,31 @@ void ZigBeePacketBuilder::on_field_change(int offset, int index)
                 pkt.src16 = parse_number(fields[index]->get_text());
         }
         
+        if (pkt.sender64_offset == offset)
+        {
+                pkt.sender64 = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.sender16_offset == offset)
+        {
+                pkt.sender16 = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.parent16_offset == offset)
+        {
+                pkt.parent16 = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.new64_offset == offset)
+        {
+                pkt.new64 = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.new16_offset == offset)
+        {
+                pkt.new16 = parse_number(fields[index]->get_text());
+        }
+        
         if (pkt.src_ep_offset == offset)
         {
                 pkt.src_ep = parse_number(fields[index]->get_text());
@@ -208,6 +233,11 @@ void ZigBeePacketBuilder::on_field_change(int offset, int index)
         if (pkt.analog_mask_offset == offset)
         {
                 pkt.analog_mask = parse_number(fields[index]->get_text());
+        }
+        
+        if (pkt.num_samples_offset == offset)
+        {
+                pkt.num_samples = parse_number(fields[index]->get_text());
         }
         
         if (pkt.route_records_offset == offset)
@@ -472,6 +502,81 @@ void ZigBeePacketBuilder::read_packet()
                                 row++;
                         }
                         
+                        if (pkt.sender64_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Sender 64:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.sender16_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Sender 16:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.parent16_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Parent 16:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.new64_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("New 64:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
+                        if (pkt.new16_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("New 16:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
                         if (pkt.src_ep_offset == i)
                         {
                                 labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
@@ -622,6 +727,21 @@ void ZigBeePacketBuilder::read_packet()
                                 row++;
                         }
                         
+                        if (pkt.num_samples_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("Samples:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
                         if (pkt.data_offset == i)
                         {
                                 labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
@@ -734,6 +854,51 @@ void ZigBeePacketBuilder::read_packet()
                         row++;
                 }
                 
+                if (pkt.sender64_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(16) << std::hex << pkt.sender64;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.sender16_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.sender16;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.parent16_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.parent16;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.new64_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(16) << std::hex << pkt.new64;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.new16_offset == i)
+                {
+                        ss.str("");
+                        ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << (int)pkt.new16;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
                 if (pkt.src_ep_offset == i)
                 {
                         ss.str("");
@@ -819,6 +984,15 @@ void ZigBeePacketBuilder::read_packet()
                 {
                         ss.str("");
                         ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.analog_mask;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.num_samples_offset == i)
+                {
+                        ss.str("");
+                        ss << std::dec << (int)pkt.num_samples;
                         fields[row]->set_text(ss.str());
                         
                         row++;
