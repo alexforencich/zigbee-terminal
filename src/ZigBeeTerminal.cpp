@@ -202,71 +202,6 @@ ZigBeeTerminal::ZigBeeTerminal()
         
         ser_int.set_debug(true);
         
-        ZigBeePacket pkt = ZigBeePacket();
-        
-        pkt.identifier = ZigBeePacket::ZBPID_TxRequest;
-        pkt.frame_id = 1;
-        pkt.dest64 = 0x1234567812345678;
-        pkt.dest16 = 0x4321;
-        pkt.radius = 2;
-        pkt.options = 3;
-        pkt.data.push_back(0x12);
-        pkt.data.push_back(0x34);
-        pkt.data.push_back(0x56);
-        pkt.data.push_back(0x78);
-        pkt.data.push_back(0x90);
-        
-        pkt.build_packet();
-        
-        std::cout << "Test ZigBeePacket" << std::endl;
-        
-        std::cout << pkt.get_desc() << std::endl;
-        
-        std::cout << pkt.get_hex_packet() << std::endl;
-        
-        ZigBeePacket pkt2 = ZigBeePacket();
-        
-        size_t len;
-        pkt2.read_packet(pkt.get_raw_packet(), len);
-        
-        std::cout << "read: " << len << std::endl;
-        
-        pkt2.decode_packet();
-        
-        std::cout << pkt2.get_desc() << std::endl;
-        
-        std::cout << pkt2.get_hex_packet() << std::endl;
-        
-        // insert some test data
-        Gtk::TreeModel::Row row;
-        
-        row = *(tv_pkt_log_tm->append());
-        row[cPacketLogModel.Packet] = pkt2;
-        row[cPacketLogModel.Direction] = "TX";
-        row[cPacketLogModel.Type] = pkt2.get_type_desc();
-        row[cPacketLogModel.Size] = pkt2.get_length();
-        row[cPacketLogModel.Data] = pkt2.get_hex_packet();
-        
-        pkt2.identifier = ZigBeePacket::ZBPID_RxPacket;
-        pkt2.src64 = 0x1122334455667788;
-        pkt2.src16 = 0x1234;
-        pkt2.options = 0;
-        
-        pkt2.build_packet();
-        
-        std::vector<uint8_t> data = pkt2.get_raw_packet();
-        
-        read_data_queue.insert(read_data_queue.end(), data.begin(), data.end());
-        
-        on_receive_data();
-        
-        /*row = *(tv_pkt_log_tm->append());
-        row[cPacketLogModel.Packet] = pkt2;
-        row[cPacketLogModel.Direction] = "RX";
-        row[cPacketLogModel.Type] = pkt2.get_type_desc();
-        row[cPacketLogModel.Size] = pkt2.get_length();
-        row[cPacketLogModel.Data] = pkt2.get_hex_packet();*/
-        
         show_all_children();
 }
 
@@ -441,10 +376,6 @@ void ZigBeeTerminal::on_port_receive_data()
         
         on_receive_data();
         
-        //std::cout << "Read " << num << " bytes: ";
-        //for (int i = 0; i < num; i++)
-        //        std::cout << buf[i];
-        //std::cout << std::endl;
 }
 
 void ZigBeeTerminal::on_receive_data()
