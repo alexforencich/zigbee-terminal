@@ -70,9 +70,11 @@ ZigBeeTerminal::ZigBeeTerminal()
         view_menu_item.set_submenu(view_menu);
         
         view_hex_terminal.set_label("Hex Terminal");
+        view_hex_terminal.signal_toggled().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_view_hex_terminal_toggle) );
         view_menu.append(view_hex_terminal);
         
         view_hex_log.set_label("Hex Log");
+        view_hex_log.signal_toggled().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_view_hex_log_toggle) );
         view_menu.append(view_hex_log);
         
         config_menu_item.set_label("_Config");
@@ -201,6 +203,9 @@ ZigBeeTerminal::ZigBeeTerminal()
         baud = 115200;
         port = "";
         
+        data_log_ptr = 0;
+        raw_data_log_ptr = 0;
+        
         dlgPort.set_port(port);
         dlgPort.set_baud(baud);
         
@@ -253,6 +258,22 @@ void ZigBeeTerminal::on_config_close_port_item_activate()
 }
 
 
+void ZigBeeTerminal::on_view_hex_terminal_toggle()
+{
+        tv_term.get_buffer()->set_text("");
+        data_log_ptr = 0;
+        update_log();
+}
+
+
+void ZigBeeTerminal::on_view_hex_log_toggle()
+{
+        tv_raw_log.get_buffer()->set_text("");
+        raw_data_log_ptr = 0;
+        update_raw_log();
+}
+
+
 bool ZigBeeTerminal::on_tv_key_press(GdkEventKey *key)
 {
         guint u = gdk_keyval_to_unicode(key->keyval);
@@ -275,18 +296,18 @@ bool ZigBeeTerminal::on_tv_key_press(GdkEventKey *key)
         
         if (str.length() > 0)
         {
-                if (ser_int.is_open())
+                if (ser_int.is_open() && !config_api_mode.get_active())
                 {
-                        ser_int.write(str.c_str(), 1, num);
+                        ser_int.write(str.c_str(), str.size(), num);
                         
                         if (config_local_echo.get_active())
                         {
-                                Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
-                                buffer->insert_with_tag(buffer->end(), str, "xmit");
+                                for (int i = 0; i < str.size(); i++)
+                                {
+                                        data_log.push_back(0x1000 | ((int)str[i] & 0x00FF));
+                                }
                                 
-                                Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
-                                tv_term.scroll_to(end_mark);
-                                buffer->delete_mark(end_mark);
+                                update_log();
                         }
                 }
         }
@@ -313,18 +334,62 @@ void ZigBeeTerminal::on_pkt_builder_change()
 
 void ZigBeeTerminal::on_btn_pkt_builder_send_click()
 {
+        gsize num;
+        int ret;
+        int len;
+        char *ptr;
+        
         ZigBeePacket pkt = pkt_builder.get_packet();
+        std::vector<uint8_t> data = pkt.get_raw_packet();
         
         Gtk::TreeModel::Row row;
         
-        row = *(tv_pkt_log_tm->append());
-        row[cPacketLogModel.Packet] = pkt;
-        row[cPacketLogModel.Direction] = "TX";
-        row[cPacketLogModel.Type] = pkt.get_type_desc();
-        row[cPacketLogModel.Size] = pkt.get_length();
-        row[cPacketLogModel.Data] = pkt.get_hex_packet();
+        if (config_api_mode.get_active())
+        {
+                len = data.size();
+                ptr = (char *)&data[0];
+                
+                while (len > 0)
+                {
+                        ret = ser_int.write(ptr, len, num);
+                        
+                        if (ret != SerialInterface::SS_Success)
+                        {
+                                std::cerr << "Error: unable to write packet!";
+                                return;
+                        }
+                        
+                        for (int i = 0; i < num; i++)
+                        {
+                                raw_data_log.push_back(0x1000 | ((int)ptr[i] & 0x00FF));
+                        }
+                        
+                        len -= num;
+                        ptr += num;
+                }
+                
+                if (pkt.identifier == ZigBeePacket::ZBPID_TxRequest ||
+                        pkt.identifier == ZigBeePacket::ZBPID_EATxRequest ||
+                        pkt.identifier == ZigBeePacket::ZBPID_RxPacket ||
+                        pkt.identifier == ZigBeePacket::ZBPID_EARxPacket)
+                {
+                        for (int i = 0; i < pkt.data.size(); i++)
+                        {
+                                data_log.push_back(0x1000 | ((int)pkt.data[i] & 0x00FF));
+                        }
+                }
+                
+                update_log();
+                update_raw_log();
+                
+                row = *(tv_pkt_log_tm->append());
+                row[cPacketLogModel.Packet] = pkt;
+                row[cPacketLogModel.Direction] = "TX";
+                row[cPacketLogModel.Type] = pkt.get_type_desc();
+                row[cPacketLogModel.Size] = pkt.get_length();
+                row[cPacketLogModel.Data] = pkt.get_hex_packet();
+        }
         
-        // write it here...
 }
 
 
@@ -367,24 +432,26 @@ void ZigBeeTerminal::on_port_receive_data()
                 
                 std::cout << "Read " << num << " bytes" << std::endl;
                 
-                Glib::ustring str;
                 for (int i = 0; i < num; i++)
                 {
                         read_data_queue.push_back(buf[i]);
-                        str += buf[i];
+                        raw_data_log.push_back(((int)buf[i] & 0x00FF));
                 }
                 
-                Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
-                buffer->insert_with_tag(buffer->end(), str, "recv");
-                
-                Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
-                tv_term.scroll_to(end_mark);
-                buffer->delete_mark(end_mark);
+                if (!config_api_mode.get_active())
+                {
+                        for (int i = 0; i < num; i++)
+                        {
+                                data_log.push_back(((int)buf[i] & 0x00FF));
+                        }
+                }
         }
         while (num == 1024);
         
-        on_receive_data();
+        update_log();
+        update_raw_log();
         
+        on_receive_data();
 }
 
 void ZigBeeTerminal::on_receive_data()
@@ -398,10 +465,8 @@ void ZigBeeTerminal::on_receive_data()
                 do
                 {
                         len = 0;
-                        std::cout << "Read Packet (" << read_data_queue.size() << ")" << std::endl;
                         if (pkt.read_packet(read_data_queue, len))
                         {
-                                std::cout << "Decode Packet" << std::endl;
                                 pkt.decode_packet();
                                 
                                 Gtk::TreeModel::Row row = *(tv_pkt_log_tm->append());
@@ -410,17 +475,133 @@ void ZigBeeTerminal::on_receive_data()
                                 row[cPacketLogModel.Type] = pkt.get_type_desc();
                                 row[cPacketLogModel.Size] = pkt.get_length();
                                 row[cPacketLogModel.Data] = pkt.get_hex_packet();
-                                std::cout << "RX packet: " << pkt.get_hex_packet() << std::endl;
+                                
+                                
+                
+                                if (pkt.identifier == ZigBeePacket::ZBPID_TxRequest ||
+                                        pkt.identifier == ZigBeePacket::ZBPID_EATxRequest ||
+                                        pkt.identifier == ZigBeePacket::ZBPID_RxPacket ||
+                                        pkt.identifier == ZigBeePacket::ZBPID_EARxPacket)
+                                {
+                                        for (int i = 0; i < pkt.data.size(); i++)
+                                        {
+                                                data_log.push_back(((int)pkt.data[i] & 0x00FF));
+                                        }
+                                }
+                                
+                                update_log();
                         }
                         for (int i = 0; i < len; i++)
                                 read_data_queue.pop_front();
-                        std::cout << "Read complete (" << len << ")" << std::endl;
                 }
                 while (read_data_queue.size() > 0 && len > 0);
                 
         }
         
-        std::cout << "Done" << std::endl;
+}
+
+
+void ZigBeeTerminal::update_log()
+{
+        Glib::RefPtr<Gtk::TextBuffer> buffer = tv_term.get_buffer();
+        
+        if (view_hex_terminal.get_active())
+        {
+                for (unsigned int i = data_log_ptr; i < data_log.size(); i++)
+                {
+                        std::stringstream ss;
+                        
+                        if (i > 0)
+                                ss << " ";
+                        
+                        ss << std::setfill('0') << std::setw(2) << std::hex << (data_log[i] & 0x00FF);
+                        
+                        if (data_log[i] & 0x1000)
+                        {
+                                buffer->insert_with_tag(buffer->end(), ss.str(), "xmit");
+                        }
+                        else
+                        {
+                                buffer->insert_with_tag(buffer->end(), ss.str(), "recv");
+                        }
+                }
+        }
+        else
+        {
+                for (unsigned int i = data_log_ptr; i < data_log.size(); i++)
+                {
+                        std::stringstream ss;
+                        
+                        ss << (uint8_t)data_log[i];
+                        
+                        if (data_log[i] & 0x1000)
+                        {
+                                buffer->insert_with_tag(buffer->end(), Glib::convert(ss.str(), "utf-8", "iso-8859-1"), "xmit");
+                        }
+                        else
+                        {
+                                buffer->insert_with_tag(buffer->end(), Glib::convert(ss.str(), "utf-8", "iso-8859-1"), "recv");
+                        }
+                }
+        }
+        
+        Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
+        tv_term.scroll_to(end_mark);
+        buffer->delete_mark(end_mark);
+        
+        data_log_ptr = data_log.size();
+}
+
+
+void ZigBeeTerminal::update_raw_log()
+{
+        Glib::RefPtr<Gtk::TextBuffer> buffer = tv_raw_log.get_buffer();
+        
+        if (view_hex_log.get_active())
+        {
+                for (unsigned int i = raw_data_log_ptr; i < raw_data_log.size(); i++)
+                {
+                        std::stringstream ss;
+                        
+                        if (i > 0)
+                                ss << " ";
+                        
+                        ss << std::setfill('0') << std::setw(2) << std::hex << (raw_data_log[i] & 0x00FF);
+                        
+                        if (raw_data_log[i] & 0x1000)
+                        {
+                                buffer->insert_with_tag(buffer->end(), ss.str(), "xmit");
+                        }
+                        else
+                        {
+                                buffer->insert_with_tag(buffer->end(), ss.str(), "recv");
+                        }
+                }
+        }
+        else
+        {
+                for (unsigned int i = raw_data_log_ptr; i < raw_data_log.size(); i++)
+                {
+                        std::stringstream ss;
+                        
+                        ss << (uint8_t)raw_data_log[i];
+                        
+                        if (raw_data_log[i] & 0x1000)
+                        {
+                                buffer->insert_with_tag(buffer->end(), Glib::convert(ss.str(), "utf-8", "iso-8859-1"), "xmit");
+                        }
+                        else
+                        {
+                                buffer->insert_with_tag(buffer->end(), Glib::convert(ss.str(), "utf-8", "iso-8859-1"), "recv");
+                        }
+                }
+        }
+        
+        Glib::RefPtr<Gtk::TextMark> end_mark = buffer->create_mark (buffer->end()); 
+        tv_raw_log.scroll_to(end_mark);
+        buffer->delete_mark(end_mark);
+        
+        raw_data_log_ptr = raw_data_log.size();
 }
 
 

@@ -54,6 +54,9 @@ protected:
         void on_config_port_item_activate();
         void on_config_close_port_item_activate();
         
+        void on_view_hex_terminal_toggle();
+        void on_view_hex_log_toggle();
+        
         bool on_tv_key_press(GdkEventKey *key);
         
         void on_tv_pkt_log_cursor_changed();
@@ -66,6 +69,9 @@ protected:
         void on_port_receive_data();
         
         void on_receive_data();
+        
+        void update_log();
+        void update_raw_log();
         
         void open_port();
         void close_port();
@@ -144,6 +150,12 @@ protected:
         SerialInterface ser_int;
         
         std::deque<char> read_data_queue;
+        
+        std::vector<int> data_log;
+        std::vector<int> raw_data_log;
+        
+        unsigned int data_log_ptr;
+        unsigned int raw_data_log_ptr;
         
 };
 
