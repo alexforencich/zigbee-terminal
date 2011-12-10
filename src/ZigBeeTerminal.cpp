@@ -111,9 +111,11 @@ ZigBeeTerminal::ZigBeeTerminal()
         tv_term.signal_key_press_event().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_tv_key_press), false );
         
         // tags
-        Glib::RefPtr<Gtk::TextBuffer::Tag> recv = tv_term.get_buffer()->create_tag("recv");
-        Glib::RefPtr<Gtk::TextBuffer::Tag> xmit = tv_term.get_buffer()->create_tag("xmit");
-        recv->property_weight() = PANGO_WEIGHT_BOLD;
+        {
+                Glib::RefPtr<Gtk::TextBuffer::Tag> recv = tv_term.get_buffer()->create_tag("recv");
+                Glib::RefPtr<Gtk::TextBuffer::Tag> xmit = tv_term.get_buffer()->create_tag("xmit");
+                recv->property_weight() = PANGO_WEIGHT_BOLD;
+        }
         
         sw_term.add(tv_term);
         sw_term.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
@@ -124,6 +126,13 @@ ZigBeeTerminal::ZigBeeTerminal()
         tv_raw_log.modify_font(Pango::FontDescription("monospace"));
         tv_raw_log.set_editable(false);
         tv_raw_log.set_wrap_mode(Gtk::WRAP_WORD_CHAR);
+        
+        // tags
+        {
+                Glib::RefPtr<Gtk::TextBuffer::Tag> recv = tv_raw_log.get_buffer()->create_tag("recv");
+                Glib::RefPtr<Gtk::TextBuffer::Tag> xmit = tv_raw_log.get_buffer()->create_tag("xmit");
+                recv->property_weight() = PANGO_WEIGHT_BOLD;
+        }
         
         sw_raw_log.add(tv_raw_log);
         sw_raw_log.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
