@@ -62,7 +62,6 @@ ZigBeePacketBuilder::ZigBeePacketBuilder()
         
         for (int i = 0; i < identifier_list.size(); i++)
         {
-        int row = 2;
                 std::stringstream ss;
                 ss << ZigBeePacket::get_type_desc(identifier_list[i]);
                 ss << " (0x" << std::setfill('0') << std::setw(2) << std::hex << identifier_list[i] << ")";
