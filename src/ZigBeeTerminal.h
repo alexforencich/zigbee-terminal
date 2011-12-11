@@ -146,6 +146,10 @@ protected:
         
         Glib::ustring port;
         unsigned long baud;
+        SerialInterface::SerialParity parity;
+        int bits;
+        int stop_bits;
+        SerialInterface::SerialFlow flow_control;
         
         SerialInterface ser_int;
         

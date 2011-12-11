@@ -202,12 +202,20 @@ ZigBeeTerminal::ZigBeeTerminal()
         
         baud = 115200;
         port = "";
+        parity = SerialInterface::SP_None;
+        bits = 8;
+        stop_bits = 1;
+        flow_control = SerialInterface::SF_None;
         
         data_log_ptr = 0;
         raw_data_log_ptr = 0;
         
         dlgPort.set_port(port);
         dlgPort.set_baud(baud);
+        dlgPort.set_parity(parity);
+        dlgPort.set_bits(bits);
+        dlgPort.set_stop_bits(stop_bits);
+        dlgPort.set_flow_control(flow_control);
         
         ser_int.port_opened().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_open) );
         ser_int.port_closed().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_close) );
@@ -238,6 +246,10 @@ void ZigBeeTerminal::on_config_port_item_activate()
         
         dlgPort.set_port(port);
         dlgPort.set_baud(baud);
+        dlgPort.set_parity(parity);
+        dlgPort.set_bits(bits);
+        dlgPort.set_stop_bits(stop_bits);
+        dlgPort.set_flow_control(flow_control);
         response = dlgPort.run();
         
         if (response == Gtk::RESPONSE_OK)
@@ -246,6 +258,10 @@ void ZigBeeTerminal::on_config_port_item_activate()
                 
                 port = dlgPort.get_port();
                 baud = dlgPort.get_baud();
+                parity = dlgPort.get_parity();
+                bits = dlgPort.get_bits();
+                stop_bits = dlgPort.get_stop_bits();
+                flow_control = dlgPort.get_flow_control();
                 
                 open_port();
         }
@@ -612,6 +628,10 @@ void ZigBeeTerminal::open_port()
         
         ser_int.set_port(port);
         ser_int.set_baud(baud);
+        ser_int.set_parity(parity);
+        ser_int.set_bits(bits);
+        ser_int.set_stop(stop_bits);
+        ser_int.set_flow(flow_control);
         ser_int.open_port();
 }
 
