@@ -61,20 +61,7 @@ protected:
         
         Glib::ustring select_port(Glib::ustring p);
         unsigned long select_baud(unsigned long b);
-
-        //Tree model columns:
-        class TextColumn : public Gtk::TreeModel::ColumnRecord
-        {
-        public:
-
-        TextColumn()
-        { add(name); }
-
-        Gtk::TreeModelColumn<Glib::ustring> name; //The data to choose - this must be text.
-        };
-
-        TextColumn cText;
-
+        
         //Child widgets:
         Gtk::Button *btnOK;
         Gtk::Button *btnCancel;
@@ -82,11 +69,8 @@ protected:
         Gtk::Table table;
         Gtk::Label label1;
         Gtk::Label label2;
-        Gtk::ComboBox cmbPort;
-        Gtk::ComboBox cmbSpeed;
-        
-        Glib::RefPtr<Gtk::ListStore> cmbPort_tm;
-        Glib::RefPtr<Gtk::ListStore> cmbSpeed_tm;
+        Gtk::ComboBoxText cmbtPort;
+        Gtk::ComboBoxText cmbtSpeed;
         
         Glib::ustring port;
         unsigned long baud;

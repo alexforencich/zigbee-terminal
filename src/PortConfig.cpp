@@ -69,48 +69,26 @@ PortConfig::PortConfig()
         label2.set_label("Speed:");
         table.attach(label2, 1, 2, 0, 1);
         
-        cmbPort_tm = Gtk::ListStore::create(cText);
-        cmbPort.set_model(cmbPort_tm);
-        
         refresh_ports();
         
-        cmbPort.pack_start(cText.name);
+        cmbtPort.set_active(0);
         
-        cmbPort.set_active(0);
+        table.attach(cmbtPort, 0, 1, 1, 2);
         
-        table.attach(cmbPort, 0, 1, 1, 2);
+        cmbtSpeed.append("300");
+        cmbtSpeed.append("600");
+        cmbtSpeed.append("1200");
+        cmbtSpeed.append("2400");
+        cmbtSpeed.append("4800");
+        cmbtSpeed.append("9600");
+        cmbtSpeed.append("19200");
+        cmbtSpeed.append("38400");
+        cmbtSpeed.append("57600");
+        cmbtSpeed.append("115200");
         
-        cmbSpeed_tm = Gtk::ListStore::create(cText);
-        cmbSpeed.set_model(cmbSpeed_tm);
+        cmbtSpeed.set_active(0);
         
-        Gtk::TreeModel::Row row;
-        
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "300";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "600";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "1200";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "2400";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "4800";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "9600";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "19200";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "38400";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "57600";
-        row = *(cmbSpeed_tm->append());
-        row[cText.name] = "115200";
-        
-        cmbSpeed.pack_start(cText.name);
-        
-        cmbSpeed.set_active(0);
-        
-        table.attach(cmbSpeed, 1, 2, 1, 2);
+        table.attach(cmbtSpeed, 1, 2, 1, 2);
         
         show_all_children();
 }
@@ -129,12 +107,11 @@ void PortConfig::refresh_ports()
         
         Gtk::TreeModel::Row row;
         
-        cmbPort_tm->clear();
+        cmbtPort.remove_all();
         
         for (it = ports.begin(); it != ports.end(); ++it)
         {
-                row = *(cmbPort_tm->append());
-                row[cText.name] = *it;
+                cmbtPort.append(*it);
                 
                 #ifdef __unix__
                 if (ind == -1 && (*it).find("ttyUSB") != std::string::npos)
@@ -147,7 +124,7 @@ void PortConfig::refresh_ports()
         if (ind == -1)
                 ind = 0;
         
-        cmbPort.set_active(ind);
+        cmbtPort.set_active(ind);
         select_port(port);
 }
 
@@ -163,28 +140,9 @@ void PortConfig::on_show()
 
 void PortConfig::on_ok_click()
 {
-        Glib::ustring str;
+        port = cmbtPort.get_active_text();
         
-        Gtk::TreeModel::iterator iter = cmbPort.get_active();
-        if (iter)
-        {
-                Gtk::TreeModel::Row row = *iter;
-                if (row)
-                {
-                        port = row[cText.name];
-                }
-        }
-        
-        iter = cmbSpeed.get_active();
-        if (iter)
-        {
-                Gtk::TreeModel::Row row = *iter;
-                if (row)
-                {
-                        str = row[cText.name];
-                        baud = atol(str.c_str());
-                }
-        }
+        baud = atol(cmbtSpeed.get_active_text().c_str());
         
         hide();
 }
@@ -230,19 +188,8 @@ Glib::ustring PortConfig::select_port(Glib::ustring p)
 {
         if (p.length() > 0)
         {
-                Glib::ustring str;
-                Gtk::TreeModel::iterator iter;
-                Gtk::TreeModel::Row row;
-                for (iter = cmbPort_tm->children().begin(); iter != cmbPort_tm->children().end(); ++iter)
-                {
-                        row = *iter;
-                        str = row[cText.name];
-                        if (str == p)
-                        {
-                                cmbPort.set_active(iter);
-                                return str;
-                        }
-                }
+                cmbtPort.set_active_text(p);
+                return p;
         }
         return "";
 }
@@ -251,21 +198,8 @@ unsigned long PortConfig::select_baud(unsigned long b)
 {
         if (b > 0)
         {
-                Glib::ustring str;
-                Gtk::TreeModel::iterator iter;
-                Gtk::TreeModel::Row row;
-                unsigned long l;
-                for (iter = cmbSpeed_tm->children().begin(); iter != cmbSpeed_tm->children().end(); ++iter)
-                {
-                        row = *iter;
-                        str = row[cText.name];
-                        l = atol(str.c_str());
-                        if (l == b)
-                        {
-                                cmbSpeed.set_active(iter);
-                                return b;
-                        }
-                }
+                cmbtSpeed.set_active_text(Glib::ustring::format(b));
+                return b;
         }
         return 0;
 }
