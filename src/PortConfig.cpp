@@ -69,8 +69,6 @@ PortConfig::PortConfig() :
         
         refresh_ports();
         
-        cmbtPort.set_active(0);
-        
         table.attach(cmbtPort, 0, 1, 1, 2);
         
         label2.set_label("Speed:");
@@ -176,7 +174,9 @@ void PortConfig::refresh_ports()
         if (ind == -1)
                 ind = 0;
         
-        cmbtPort.set_active(ind);
+        if (port == "" && ind > 0)
+                port = ports[ind];
+        
         select_port(port);
 }
 
