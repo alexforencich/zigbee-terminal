@@ -443,6 +443,14 @@ void ZigBeeTerminal::on_port_receive_data()
                 if (status == SerialInterface::SS_Error)
                 {
                         std::cout << "Read error!" << std::endl;
+                        close_port();
+                        return;
+                }
+                
+                if (status == SerialInterface::SS_EOF)
+                {
+                        std::cout << "End of file!" << std::endl;
+                        close_port();
                         return;
                 }
                 
