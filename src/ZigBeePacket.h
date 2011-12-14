@@ -292,6 +292,9 @@ public:
                 uint8_t status;
         } __attribute__ ((__packed__));
         
+        ZigBeePacket();
+        virtual ~ZigBeePacket();
+        
         // overall packet
         std::vector<uint8_t> payload;
         
@@ -370,6 +373,7 @@ public:
         std::vector<uint16_t> route_records;
         int route_records_offset;
         
+        void zero();
         uint16_t get_length();
         uint8_t get_checksum();
         std::vector<uint8_t> get_raw_packet();

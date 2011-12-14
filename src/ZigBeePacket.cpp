@@ -158,6 +158,77 @@ std::string ZigBeePacket::get_type_desc(int identifier)
         }
 }
 
+ZigBeePacket::ZigBeePacket()
+{
+        zero();
+}
+
+ZigBeePacket::~ZigBeePacket()
+{
+        // nothing
+}
+
+void ZigBeePacket::zero()
+{
+        identifier = ZBPID_ATCommand;
+        frame_id = 0;
+        frame_id_offset = 0;
+        at_cmd[0] = ' ';
+        at_cmd[1] = ' ';
+        at_cmd_offset = 0;
+        status = 0;
+        status_offset = 0;
+        options = 0;
+        options_offset = 0;
+        reserved_offset = 0;
+        min_length = 0;
+        field_count = 0;
+        dest64 = 0;
+        dest64_offset = 0;
+        dest16 = 0;
+        dest16_offset = 0;
+        src64 = 0;
+        src64_offset = 0;
+        src16 = 0;
+        src16_offset = 0;
+        sender64 = 0;
+        sender64_offset = 0;
+        sender16 = 0;
+        sender16_offset = 0;
+        parent16 = 0;
+        parent16_offset = 0;
+        new64 = 0;
+        new64_offset = 0;
+        new16 = 0;
+        new16_offset = 0;
+        src_ep = 0;
+        src_ep_offset = 0;
+        dest_ep = 0;
+        dest_ep_offset = 0;
+        cluster_id = 0;
+        cluster_id_offset = 0;
+        profile_id = 0;
+        profile_id_offset = 0;
+        radius = 0;
+        radius_offset = 0;
+        transmit_retries = 0;
+        transmit_retries_offset = 0;
+        delivery_status = 0;
+        delivery_status_offset = 0;
+        discovery_status = 0;
+        discovery_status_offset = 0;
+        digital_mask = 0;
+        digital_mask_offset = 0;
+        analog_mask = 0;
+        analog_mask_offset = 0;
+        num_samples = 0;
+        num_samples_offset = 0;
+        data.clear();
+        data_offset = 0;
+        route_records.clear();
+        route_records_offset = 0;
+}
+
 uint16_t ZigBeePacket::get_length()
 {
         return payload.size()+4;
