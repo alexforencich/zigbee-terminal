@@ -557,7 +557,12 @@ void ZigBeeTerminal::update_log()
                         std::stringstream ss;
                         
                         if (i > 0)
-                                ss << " ";
+                        {
+                                if (i % 16 == 0)
+                                        ss << "\n";
+                                else
+                                        ss << " ";
+                        }
                         
                         ss << std::setfill('0') << std::setw(2) << std::hex << (data_log[i] & 0x00FF);
                         
@@ -609,7 +614,12 @@ void ZigBeeTerminal::update_raw_log()
                         std::stringstream ss;
                         
                         if (i > 0)
-                                ss << " ";
+                        {
+                                if (i % 16 == 0)
+                                        ss << "\n";
+                                else
+                                        ss << " ";
+                        }
                         
                         ss << std::setfill('0') << std::setw(2) << std::hex << (raw_data_log[i] & 0x00FF);
                         
