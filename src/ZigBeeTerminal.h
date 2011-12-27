@@ -56,6 +56,7 @@ protected:
         
         void on_view_hex_terminal_toggle();
         void on_view_hex_log_toggle();
+        void on_view_clear_activate();
         
         bool on_tv_key_press(GdkEventKey *key);
         
@@ -106,6 +107,8 @@ protected:
         Gtk::Menu view_menu;
         Gtk::CheckMenuItem view_hex_terminal;
         Gtk::CheckMenuItem view_hex_log;
+        Gtk::SeparatorMenuItem view_sep1;
+        Gtk::ImageMenuItem view_clear_item;
         Gtk::MenuItem config_menu_item;
         Gtk::Menu config_menu;
         Gtk::ImageMenuItem config_port_item;

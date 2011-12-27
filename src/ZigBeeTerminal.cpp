@@ -77,6 +77,12 @@ ZigBeeTerminal::ZigBeeTerminal()
         view_hex_log.signal_toggled().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_view_hex_log_toggle) );
         view_menu.append(view_hex_log);
         
+        view_menu.append(view_sep1);
+        
+        view_clear_item.set_label("Clear");
+        view_clear_item.signal_activate().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_view_clear_activate) );
+        view_menu.append(view_clear_item);
+        
         config_menu_item.set_label("_Config");
         config_menu_item.set_use_underline(true);
         main_menu.append(config_menu_item);
@@ -290,6 +296,19 @@ void ZigBeeTerminal::on_view_hex_log_toggle()
 }
 
 
+void ZigBeeTerminal::on_view_clear_activate()
+{
+        read_data_queue.clear();
+        data_log.clear();
+        data_log_ptr = 0;
+        raw_data_log.clear();
+        raw_data_log_ptr = 0;
+        tv_term.get_buffer()->set_text("");
+        tv_raw_log.get_buffer()->set_text("");
+        tv_pkt_log_tm->clear();
+}
+
+
 bool ZigBeeTerminal::on_tv_key_press(GdkEventKey *key)
 {
         guint u = gdk_keyval_to_unicode(key->keyval);
@@ -454,7 +473,7 @@ void ZigBeeTerminal::on_port_receive_data()
                         return;
                 }
                 
-                std::cout << "Read " << num << " bytes" << std::endl;
+                std::cout << "Read " << std::dec << num << " bytes" << std::endl;
                 
                 for (int i = 0; i < num; i++)
                 {
