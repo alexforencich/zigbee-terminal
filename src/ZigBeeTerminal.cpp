@@ -377,8 +377,6 @@ void ZigBeeTerminal::on_btn_pkt_builder_send_click()
         ZigBeePacket pkt = pkt_builder.get_packet();
         std::vector<uint8_t> data = pkt.get_raw_packet();
         
-        Gtk::TreeModel::Row row;
-        
         if (config_api_mode.get_active())
         {
                 len = data.size();
@@ -417,12 +415,15 @@ void ZigBeeTerminal::on_btn_pkt_builder_send_click()
                 update_log();
                 update_raw_log();
                 
-                row = *(tv_pkt_log_tm->append());
+                Gtk::TreeModel::iterator it = tv_pkt_log_tm->append();
+                Gtk::TreePath path = Gtk::TreePath(it);
+                Gtk::TreeModel::Row row = *it;
                 row[cPacketLogModel.Packet] = pkt;
                 row[cPacketLogModel.Direction] = "TX";
                 row[cPacketLogModel.Type] = pkt.get_type_desc();
                 row[cPacketLogModel.Size] = pkt.get_length();
                 row[cPacketLogModel.Data] = pkt.get_hex_packet();
+                tv_pkt_log.scroll_to_row(path);
         }
         
 }
@@ -512,15 +513,16 @@ void ZigBeeTerminal::on_receive_data()
                         {
                                 pkt.decode_packet();
                                 
-                                Gtk::TreeModel::Row row = *(tv_pkt_log_tm->append());
+                                Gtk::TreeModel::iterator it = tv_pkt_log_tm->append();
+                                Gtk::TreePath path = Gtk::TreePath(it);
+                                Gtk::TreeModel::Row row = *it;
                                 row[cPacketLogModel.Packet] = pkt;
                                 row[cPacketLogModel.Direction] = "RX";
                                 row[cPacketLogModel.Type] = pkt.get_type_desc();
                                 row[cPacketLogModel.Size] = pkt.get_length();
                                 row[cPacketLogModel.Data] = pkt.get_hex_packet();
+                                tv_pkt_log.scroll_to_row(path);
                                 
-                                
-                
                                 if (pkt.identifier == ZigBeePacket::ZBPID_TxRequest ||
                                         pkt.identifier == ZigBeePacket::ZBPID_EATxRequest ||
                                         pkt.identifier == ZigBeePacket::ZBPID_RxPacket ||
