@@ -286,22 +286,22 @@ std::vector<uint8_t> ZigBeePacket::get_escaped_raw_packet()
 
 bool ZigBeePacket::read_packet(std::vector<char> bytes, size_t &bytes_read)
 {
-        read_packet((uint8_t *)&bytes[0], bytes.size(), bytes_read);
+        return read_packet((uint8_t *)&bytes[0], bytes.size(), bytes_read);
 }
 
 bool ZigBeePacket::read_packet(std::vector<uint8_t> bytes, size_t &bytes_read)
 {
-        read_packet(&bytes[0], bytes.size(), bytes_read);
+        return read_packet(&bytes[0], bytes.size(), bytes_read);
 }
 
 bool ZigBeePacket::read_packet(std::deque<char> bytes, size_t &bytes_read)
 {
-        read_packet((uint8_t *)&bytes[0], bytes.size(), bytes_read);
+        return read_packet((uint8_t *)&bytes[0], bytes.size(), bytes_read);
 }
 
 bool ZigBeePacket::read_packet(std::deque<uint8_t> bytes, size_t &bytes_read)
 {
-        read_packet(&bytes[0], bytes.size(), bytes_read);
+        return read_packet(&bytes[0], bytes.size(), bytes_read);
 }
 
 bool ZigBeePacket::read_packet(uint8_t *bytes, size_t count, size_t &bytes_read)
