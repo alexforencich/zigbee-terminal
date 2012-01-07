@@ -454,6 +454,15 @@ SerialInterface::SerialStatus SerialInterface::read(char *buf, gsize count, gsiz
         
         if (bytes_read == -1)
         {
+                if (errno == EAGAIN)
+                {
+                        if (debug)
+                                std::cout << "Read: Try again (11)" << std::endl;
+                        
+                        bytes_read = 0;
+                        return SS_Success;
+                }
+                
                 std::cerr << "Error reading serial port (errno " << errno << ")" << std::endl;
                 m_port_error.emit();
                 close_port();
