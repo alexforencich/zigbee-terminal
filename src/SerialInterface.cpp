@@ -252,8 +252,6 @@ void SerialInterface::stop_select_thread()
         if (!SetCommMask(h_port, EV_RXCHAR))
         {
                 std::cerr << "Error setting mask!" << std::endl;
-                close_port();
-                return;
         }
         
         #endif
@@ -517,6 +515,8 @@ SerialInterface::SerialStatus SerialInterface::read(char *buf, gsize count, gsiz
                 std::cout << std::endl;
         }
         
+        #ifdef __unix__
+        
         if (bytes_read == 0)
         {
                 if (debug)
@@ -524,6 +524,8 @@ SerialInterface::SerialStatus SerialInterface::read(char *buf, gsize count, gsiz
                 
                 return SS_EOF;
         }
+        
+        #endif
         
         return SS_Success;
 }
