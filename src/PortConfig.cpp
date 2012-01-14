@@ -40,9 +40,7 @@
 #include <string>
 #include <vector>
 
-PortConfig::PortConfig() :
-        cmbtPort(true),
-        cmbtSpeed(true)
+PortConfig::PortConfig()
 {
         set_title("Port Configuration");
         set_border_width(5);
@@ -74,16 +72,16 @@ PortConfig::PortConfig() :
         label2.set_label("Speed:");
         table.attach(label2, 1, 2, 0, 1);
         
-        cmbtSpeed.append("300");
-        cmbtSpeed.append("600");
-        cmbtSpeed.append("1200");
-        cmbtSpeed.append("2400");
-        cmbtSpeed.append("4800");
-        cmbtSpeed.append("9600");
-        cmbtSpeed.append("19200");
-        cmbtSpeed.append("38400");
-        cmbtSpeed.append("57600");
-        cmbtSpeed.append("115200");
+        cmbtSpeed.append_text("300");
+        cmbtSpeed.append_text("600");
+        cmbtSpeed.append_text("1200");
+        cmbtSpeed.append_text("2400");
+        cmbtSpeed.append_text("4800");
+        cmbtSpeed.append_text("9600");
+        cmbtSpeed.append_text("19200");
+        cmbtSpeed.append_text("38400");
+        cmbtSpeed.append_text("57600");
+        cmbtSpeed.append_text("115200");
         
         cmbtSpeed.set_active(0);
         
@@ -92,9 +90,9 @@ PortConfig::PortConfig() :
         label3.set_label("Parity:");
         table.attach(label3, 2, 3, 0, 1);
         
-        cmbtParity.append("none");
-        cmbtParity.append("odd");
-        cmbtParity.append("even");
+        cmbtParity.append_text("none");
+        cmbtParity.append_text("odd");
+        cmbtParity.append_text("even");
         
         cmbtParity.set_active(0);
         
@@ -103,10 +101,10 @@ PortConfig::PortConfig() :
         label4.set_label("Bits:");
         table.attach(label4, 0, 1, 2, 3);
         
-        cmbtBits.append("5");
-        cmbtBits.append("6");
-        cmbtBits.append("7");
-        cmbtBits.append("8");
+        cmbtBits.append_text("5");
+        cmbtBits.append_text("6");
+        cmbtBits.append_text("7");
+        cmbtBits.append_text("8");
         
         cmbtBits.set_active(3);
         
@@ -115,8 +113,8 @@ PortConfig::PortConfig() :
         label5.set_label("Stop Bits:");
         table.attach(label5, 1, 2, 2, 3);
         
-        cmbtStopBits.append("1");
-        cmbtStopBits.append("2");
+        cmbtStopBits.append_text("1");
+        cmbtStopBits.append_text("2");
         
         cmbtStopBits.set_active(0);
         
@@ -125,15 +123,15 @@ PortConfig::PortConfig() :
         label6.set_label("Flow Control:");
         table.attach(label6, 2, 3, 2, 3);
         
-        cmbtFlowControl.append("none");
-        cmbtFlowControl.append("hardware (RTS/CTS)");
-        cmbtFlowControl.append("software (Xon/Xoff)");
+        cmbtFlowControl.append_text("none");
+        cmbtFlowControl.append_text("hardware (RTS/CTS)");
+        cmbtFlowControl.append_text("software (Xon/Xoff)");
         
         cmbtFlowControl.set_active(0);
         
         table.attach(cmbtFlowControl, 2, 3, 3, 4);
         
-        port = cmbtPort.get_entry_text();
+        port = cmbtPort.get_active_text();
         baud = 115200;
         parity = SerialInterface::SP_None;
         bits = 8;
@@ -157,11 +155,11 @@ void PortConfig::refresh_ports()
         
         Gtk::TreeModel::Row row;
         
-        cmbtPort.remove_all();
+        cmbtPort.clear_items();
         
         for (it = ports.begin(); it != ports.end(); ++it)
         {
-                cmbtPort.append(*it);
+                cmbtPort.append_text(*it);
                 
                 #ifdef __unix__
                 if (ind == -1 && (*it).find("ttyUSB") != std::string::npos)
@@ -196,8 +194,8 @@ void PortConfig::on_show()
 
 void PortConfig::on_ok_click()
 {
-        port = cmbtPort.get_entry_text();
-        baud = atol(cmbtSpeed.get_entry_text().c_str());
+        port = cmbtPort.get_active_text();
+        baud = atol(cmbtSpeed.get_active_text().c_str());
         
         switch (cmbtParity.get_active_row_number())
         {

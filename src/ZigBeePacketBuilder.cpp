@@ -65,7 +65,7 @@ ZigBeePacketBuilder::ZigBeePacketBuilder()
                 std::stringstream ss;
                 ss << ZigBeePacket::get_type_desc(identifier_list[i]);
                 ss << " (0x" << std::setfill('0') << std::setw(2) << std::hex << identifier_list[i] << ")";
-                cmbt_type.append(ss.str());
+                cmbt_type.append_text(ss.str());
         }
         
         cmbt_type.signal_changed().connect( sigc::mem_fun(*this, &ZigBeePacketBuilder::on_type_change) );
