@@ -151,6 +151,12 @@ sigc::signal<void, const char*, size_t> ZigBeeInterface::signal_receive_raw_data
 }
 
 
+sigc::signal<void> ZigBeeInterface::signal_error()
+{
+        return m_signal_error;
+}
+
+
 void ZigBeeInterface::on_receive_data()
 {
         gsize num;
