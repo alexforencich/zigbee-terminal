@@ -466,6 +466,7 @@ void ZigBeeTerminal::on_receive_packet(ZigBeePacket pkt)
         }
 }
 
+
 void ZigBeeTerminal::on_receive_raw_data(const char *data, size_t len)
 {
         for (size_t i = 0; i < len; i++)
@@ -484,6 +485,7 @@ void ZigBeeTerminal::on_receive_raw_data(const char *data, size_t len)
         update_log();
         update_raw_log();
 }
+
 
 void ZigBeeTerminal::on_send_raw_data(const char *data, size_t len)
 {
