@@ -53,6 +53,7 @@ public:
         virtual ~ZigBeeInterface();
         
         void set_serial_interface(std::tr1::shared_ptr<SerialInterface> si);
+        void clear_serial_interface();
         
         void reset_buffer();
         
@@ -79,6 +80,10 @@ protected:
         sigc::signal<void, const char*, size_t> m_signal_send_raw_data;
         sigc::signal<void, const char*, size_t> m_signal_receive_raw_data;
         sigc::signal<void> m_signal_error;
+        
+        sigc::connection c_port_opened;
+        sigc::connection c_port_closed;
+        sigc::connection c_port_receive_data;
 };
 
 #endif //__ZIGBEE_INTERFACE_H
