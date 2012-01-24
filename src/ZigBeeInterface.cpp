@@ -38,7 +38,8 @@
 #include <iomanip>
 
 
-ZigBeeInterface::ZigBeeInterface()
+ZigBeeInterface::ZigBeeInterface() :
+        debug(false)
 {
         // nothing
 }
@@ -88,7 +89,7 @@ void ZigBeeInterface::send_packet(ZigBeePacket pkt)
         
         if (!ser_int)
         {
-                std::cout << "No SerialInterface associated!" << std::endl;
+                std::cerr << "[ZigBeeInterface] No SerialInterface associated!" << std::endl;
                 m_signal_error.emit();
                 return;
         }
@@ -105,7 +106,7 @@ void ZigBeeInterface::send_packet(ZigBeePacket pkt)
                 
                 if (ret != SerialInterface::SS_Success)
                 {
-                        std::cerr << "Error: unable to write packet!";
+                        std::cerr << "[ZigBeeInterface] Error: unable to write packet!";
                         m_signal_error.emit();
                         return;
                 }
@@ -160,7 +161,7 @@ void ZigBeeInterface::on_receive_data()
         
         if (!ser_int)
         {
-                std::cout << "No SerialInterface associated!" << std::endl;
+                std::cerr << "[ZigBeeInterface] No SerialInterface associated!" << std::endl;
                 m_signal_error.emit();
                 return;
         }
@@ -172,7 +173,7 @@ void ZigBeeInterface::on_receive_data()
                 
                 if (status == SerialInterface::SS_Error)
                 {
-                        std::cerr << "Read error!" << std::endl;
+                        std::cerr << "[ZigBeeInterface] Read error!" << std::endl;
                         m_signal_error.emit();
                         ser_int->close_port();
                         return;
@@ -180,7 +181,7 @@ void ZigBeeInterface::on_receive_data()
                 
                 if (status == SerialInterface::SS_EOF)
                 {
-                        std::cerr << "End of file!" << std::endl;
+                        std::cerr << "[ZigBeeInterface] End of file!" << std::endl;
                         m_signal_error.emit();
                         ser_int->close_port();
                         return;
@@ -188,7 +189,7 @@ void ZigBeeInterface::on_receive_data()
                 
                 if (debug)
                 {
-                        std::cout << "Read " << std::dec << num << " bytes" << std::endl;
+                        std::cout << "[ZigBeeInterface] Read " << std::dec << num << " bytes" << std::endl;
                 }
                 
                 for (int i = 0; i < num; i++)
