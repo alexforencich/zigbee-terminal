@@ -74,6 +74,12 @@ void ZigBeeInterface::clear_serial_interface()
 }
 
 
+bool ZigBeeInterface::has_serial_interface()
+{
+        return ser_int;
+}
+
+
 void ZigBeeInterface::reset_buffer()
 {
         read_data_queue.clear();

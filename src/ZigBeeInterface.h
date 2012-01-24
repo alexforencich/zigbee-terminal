@@ -54,6 +54,7 @@ public:
         
         void set_serial_interface(std::tr1::shared_ptr<SerialInterface> si);
         void clear_serial_interface();
+        bool has_serial_interface();
         
         void reset_buffer();
         
