@@ -396,6 +396,16 @@ public:
         static std::string get_type_desc(int identifier);
         
 protected:
+        // read and write payload data
+        uint8_t read_payload_uint8(int offset);
+        uint16_t read_payload_uint16(int offset);
+        uint32_t read_payload_uint32(int offset);
+        uint64_t read_payload_uint64(int offset);
+        void write_payload_uint8(int offset, uint8_t value);
+        void write_payload_uint16(int offset, uint16_t value);
+        void write_payload_uint32(int offset, uint32_t value);
+        void write_payload_uint64(int offset, uint64_t value);
+        
 };
 
 #endif //__ZIGBEE_PACKET_H

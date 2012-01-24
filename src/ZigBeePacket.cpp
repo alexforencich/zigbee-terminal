@@ -609,162 +609,36 @@ bool ZigBeePacket::build_packet()
         payload.resize(min_length);
         
         // fill in fields
-        if (frame_id_offset)
-        {
-                payload[frame_id_offset] = frame_id;
-        }
+        write_payload_uint8(frame_id_offset, frame_id);
         
         if (at_cmd_offset)
         {
-                payload[at_cmd_offset]   = at_cmd[0];
-                payload[at_cmd_offset+1] = at_cmd[1];
+                write_payload_uint8(at_cmd_offset,   at_cmd[0]);
+                write_payload_uint8(at_cmd_offset+1, at_cmd[1]);
         }
         
-        if (status_offset)
-        {
-                payload[status_offset] = status;
-        }
-        
-        if (options_offset)
-        {
-                payload[options_offset] = options;
-        }
-        
-        if (dest64_offset)
-        {
-                payload[dest64_offset]   = dest64 >> 56;
-                payload[dest64_offset+1] = dest64 >> 48;
-                payload[dest64_offset+2] = dest64 >> 40;
-                payload[dest64_offset+3] = dest64 >> 32;
-                payload[dest64_offset+4] = dest64 >> 24;
-                payload[dest64_offset+5] = dest64 >> 16;
-                payload[dest64_offset+6] = dest64 >> 8;
-                payload[dest64_offset+7] = dest64;
-        }
-        
-        if (dest16_offset)
-        {
-                payload[dest16_offset]   = dest16 >> 8;
-                payload[dest16_offset+1] = dest16;
-        }
-        
-        if (src64_offset)
-        {
-                payload[src64_offset]   = src64 >> 56;
-                payload[src64_offset+1] = src64 >> 48;
-                payload[src64_offset+2] = src64 >> 40;
-                payload[src64_offset+3] = src64 >> 32;
-                payload[src64_offset+4] = src64 >> 24;
-                payload[src64_offset+5] = src64 >> 16;
-                payload[src64_offset+6] = src64 >> 8;
-                payload[src64_offset+7] = src64;
-        }
-        
-        if (src16_offset)
-        {
-                payload[src16_offset]   = src16 >> 8;
-                payload[src16_offset+1] = src16;
-        }
-        
-        if (sender64_offset)
-        {
-                payload[sender64_offset]   = sender64 >> 56;
-                payload[sender64_offset+1] = sender64 >> 48;
-                payload[sender64_offset+2] = sender64 >> 40;
-                payload[sender64_offset+3] = sender64 >> 32;
-                payload[sender64_offset+4] = sender64 >> 24;
-                payload[sender64_offset+5] = sender64 >> 16;
-                payload[sender64_offset+6] = sender64 >> 8;
-                payload[sender64_offset+7] = sender64;
-        }
-        
-        if (sender16_offset)
-        {
-                payload[sender16_offset]   = sender16 >> 8;
-                payload[sender16_offset+1] = sender16;
-        }
-        
-        if (parent16_offset)
-        {
-                payload[parent16_offset]   = parent16 >> 8;
-                payload[parent16_offset+1] = parent16;
-        }
-        
-        if (new64_offset)
-        {
-                payload[new64_offset]   = new64 >> 56;
-                payload[new64_offset+1] = new64 >> 48;
-                payload[new64_offset+2] = new64 >> 40;
-                payload[new64_offset+3] = new64 >> 32;
-                payload[new64_offset+4] = new64 >> 24;
-                payload[new64_offset+5] = new64 >> 16;
-                payload[new64_offset+6] = new64 >> 8;
-                payload[new64_offset+7] = new64;
-        }
-        
-        if (new16_offset)
-        {
-                payload[new16_offset]   = new16 >> 8;
-                payload[new16_offset+1] = new16;
-        }
-        
-        if (src_ep_offset)
-        {
-                payload[src_ep_offset] = src_ep;
-        }
-        
-        if (dest_ep_offset)
-        {
-                payload[dest_ep_offset] = dest_ep;
-        }
-        
-        if (cluster_id_offset)
-        {
-                payload[cluster_id_offset]   = cluster_id >> 8;
-                payload[cluster_id_offset+1] = cluster_id;
-        }
-        
-        if (profile_id_offset)
-        {
-                payload[profile_id_offset]   = profile_id >> 8;
-                payload[profile_id_offset+1] = profile_id;
-        }
-        
-        if (radius_offset)
-        {
-                payload[radius_offset] = radius;
-        }
-        
-        if (transmit_retries_offset)
-        {
-                payload[transmit_retries_offset] = transmit_retries;
-        }
-        
-        if (delivery_status_offset)
-        {
-                payload[delivery_status_offset] = delivery_status;
-        }
-        
-        if (discovery_status_offset)
-        {
-                payload[discovery_status_offset] = discovery_status;
-        }
-        
-        if (digital_mask_offset)
-        {
-                payload[digital_mask_offset]   = digital_mask >> 8;
-                payload[digital_mask_offset+1] = digital_mask;
-        }
-        
-        if (analog_mask_offset)
-        {
-                payload[analog_mask_offset] = analog_mask;
-        }
-        
-        if (num_samples_offset)
-        {
-                payload[num_samples_offset] = num_samples;
-        }
+        write_payload_uint8(status_offset, status);
+        write_payload_uint8(options_offset, options);
+        write_payload_uint64(dest64_offset, dest64);
+        write_payload_uint16(dest16_offset, dest16);
+        write_payload_uint64(src64_offset, src64);
+        write_payload_uint16(src16_offset, src16);
+        write_payload_uint64(sender64_offset, sender64);
+        write_payload_uint16(sender16_offset, sender16);
+        write_payload_uint16(parent16_offset, parent16);
+        write_payload_uint64(new64_offset, new64);
+        write_payload_uint16(new16_offset, new16);
+        write_payload_uint8(src_ep_offset, src_ep);
+        write_payload_uint8(dest_ep_offset, dest_ep);
+        write_payload_uint16(cluster_id_offset, cluster_id);
+        write_payload_uint16(profile_id_offset, profile_id);
+        write_payload_uint8(radius_offset, radius);
+        write_payload_uint8(transmit_retries_offset, transmit_retries);
+        write_payload_uint8(delivery_status_offset, delivery_status);
+        write_payload_uint8(discovery_status_offset, discovery_status);
+        write_payload_uint16(digital_mask_offset, digital_mask);
+        write_payload_uint8(analog_mask_offset, analog_mask);
+        write_payload_uint8(num_samples_offset, num_samples);
         
         if (data_offset)
         {
@@ -775,7 +649,7 @@ bool ZigBeePacket::build_packet()
         {
                 payload.insert(payload.begin()+route_records_offset, route_records.size()*2, 0);
                 
-                payload[route_records_offset] = route_records.size();
+                write_payload_uint8(route_records_offset, route_records.size());
                 
                 for (int i = 0; i < route_records.size(); i++)
                 {
@@ -806,159 +680,123 @@ bool ZigBeePacket::decode_packet()
         // read fields
         if (frame_id_offset)
         {
-                frame_id = payload[frame_id_offset];
+                frame_id = read_payload_uint8(frame_id_offset);
         }
         
         if (at_cmd_offset)
         {
-                at_cmd[0] = payload[at_cmd_offset];
-                at_cmd[1] = payload[at_cmd_offset+1];
+                at_cmd[0] = read_payload_uint8(at_cmd_offset);
+                at_cmd[1] = read_payload_uint8(at_cmd_offset+1);
         }
         
         if (status_offset)
         {
-                status = payload[status_offset];
+                status = read_payload_uint8(status_offset);
         }
         
         if (options_offset)
         {
-                options = payload[options_offset];
+                options = read_payload_uint8(options_offset);
         }
         
         if (dest64_offset)
         {
-                dest64  = (uint64_t)payload[dest64_offset]   << 56;
-                dest64 |= (uint64_t)payload[dest64_offset+1] << 48;
-                dest64 |= (uint64_t)payload[dest64_offset+2] << 40;
-                dest64 |= (uint64_t)payload[dest64_offset+3] << 32;
-                dest64 |= (uint64_t)payload[dest64_offset+4] << 24;
-                dest64 |= (uint64_t)payload[dest64_offset+5] << 16;
-                dest64 |= (uint64_t)payload[dest64_offset+6] << 8;
-                dest64 |= (uint64_t)payload[dest64_offset+7];
+                dest64 = read_payload_uint64(dest64_offset);
         }
         
         if (dest16_offset)
         {
-                dest16  = (uint16_t)payload[dest16_offset] << 8;
-                dest16 |= (uint16_t)payload[dest16_offset+1];
+                dest16 = read_payload_uint16(dest16_offset);
         }
         
         if (src64_offset)
         {
-                src64  = (uint64_t)payload[src64_offset]   << 56;
-                src64 |= (uint64_t)payload[src64_offset+1] << 48;
-                src64 |= (uint64_t)payload[src64_offset+2] << 40;
-                src64 |= (uint64_t)payload[src64_offset+3] << 32;
-                src64 |= (uint64_t)payload[src64_offset+4] << 24;
-                src64 |= (uint64_t)payload[src64_offset+5] << 16;
-                src64 |= (uint64_t)payload[src64_offset+6] << 8;
-                src64 |= (uint64_t)payload[src64_offset+7];
+                src64 = read_payload_uint64(src64_offset);
         }
         
         if (src16_offset)
         {
-                src16  = (uint16_t)payload[src16_offset] << 8;
-                src16 |= (uint16_t)payload[src16_offset+1];
+                src16 = read_payload_uint16(src16_offset);
         }
         
         if (sender64_offset)
         {
-                sender64  = (uint64_t)payload[sender64_offset]   << 56;
-                sender64 |= (uint64_t)payload[sender64_offset+1] << 48;
-                sender64 |= (uint64_t)payload[sender64_offset+2] << 40;
-                sender64 |= (uint64_t)payload[sender64_offset+3] << 32;
-                sender64 |= (uint64_t)payload[sender64_offset+4] << 24;
-                sender64 |= (uint64_t)payload[sender64_offset+5] << 16;
-                sender64 |= (uint64_t)payload[sender64_offset+6] << 8;
-                sender64 |= (uint64_t)payload[sender64_offset+7];
+                sender64 = read_payload_uint64(sender64_offset);
         }
         
         if (sender16_offset)
         {
-                sender16  = (uint16_t)payload[sender16_offset] << 8;
-                sender16 |= (uint16_t)payload[sender16_offset+1];
+                sender16 = read_payload_uint16(sender16_offset);
         }
         
         if (parent16_offset)
         {
-                parent16  = (uint16_t)payload[parent16_offset] << 8;
-                parent16 |= (uint16_t)payload[parent16_offset+1];
+                parent16 = read_payload_uint16(parent16_offset);
         }
         
         if (new64_offset)
         {
-                new64  = (uint64_t)payload[new64_offset]   << 56;
-                new64 |= (uint64_t)payload[new64_offset+1] << 48;
-                new64 |= (uint64_t)payload[new64_offset+2] << 40;
-                new64 |= (uint64_t)payload[new64_offset+3] << 32;
-                new64 |= (uint64_t)payload[new64_offset+4] << 24;
-                new64 |= (uint64_t)payload[new64_offset+5] << 16;
-                new64 |= (uint64_t)payload[new64_offset+6] << 8;
-                new64 |= (uint64_t)payload[new64_offset+7];
+                new64 = read_payload_uint64(new64_offset);
         }
         
         if (new16_offset)
         {
-                new16  = (uint16_t)payload[new16_offset] << 8;
-                new16 |= (uint16_t)payload[new16_offset+1];
+                new16 = read_payload_uint16(new16_offset);
         }
         
         if (src_ep_offset)
         {
-                src_ep = payload[src_ep_offset];
+                src_ep = read_payload_uint8(src_ep_offset);
         }
         
         if (dest_ep_offset)
         {
-                dest_ep = payload[dest_ep_offset];
+                dest_ep = read_payload_uint8(dest_ep_offset);
         }
         
         if (cluster_id_offset)
         {
-                cluster_id  = payload[cluster_id_offset] << 8;
-                cluster_id |= payload[cluster_id_offset+1];
+                cluster_id = read_payload_uint16(cluster_id_offset);
         }
         
         if (profile_id_offset)
         {
-                profile_id  = payload[profile_id_offset] << 8;
-                profile_id |= payload[profile_id_offset+1];
+                profile_id = read_payload_uint16(profile_id_offset);
         }
         
         if (radius_offset)
         {
-                radius = payload[radius_offset];
+                radius = read_payload_uint8(radius_offset);
         }
         
         if (transmit_retries_offset)
         {
-                transmit_retries = payload[transmit_retries_offset];
+                transmit_retries = read_payload_uint8(transmit_retries_offset);
         }
         
         if (delivery_status_offset)
         {
-                delivery_status = payload[delivery_status_offset];
+                delivery_status = read_payload_uint8(delivery_status_offset);
         }
         
         if (discovery_status_offset)
         {
-                discovery_status = payload[discovery_status_offset];
+                discovery_status = read_payload_uint8(discovery_status_offset);
         }
         
         if (digital_mask_offset)
         {
-                digital_mask  = (uint16_t)payload[digital_mask_offset] << 8;
-                digital_mask |= (uint16_t)payload[digital_mask_offset+1];
+                digital_mask = read_payload_uint16(digital_mask_offset);
         }
         
         if (analog_mask_offset)
         {
-                analog_mask = payload[analog_mask_offset];
+                analog_mask = read_payload_uint8(analog_mask_offset);
         }
         
         if (num_samples_offset)
         {
-                num_samples = payload[num_samples_offset];
+                num_samples = read_payload_uint8(num_samples_offset);
         }
         
         if (data_offset)
@@ -971,7 +809,7 @@ bool ZigBeePacket::decode_packet()
         {
                 route_records.clear();
                 
-                for (int i = payload[route_records_offset]; i > 0; i--)
+                for (int i = read_payload_uint8(route_records_offset); i > 0; i--)
                 {
                         uint16_t n = (uint16_t)payload[route_records_offset+1+n*2] << 8;
                         n |= (uint16_t)payload[route_records_offset+1+n*2+1];
@@ -1162,6 +1000,90 @@ std::string ZigBeePacket::get_hex_packet()
 }
 
 
+// read and write payload data
+uint8_t ZigBeePacket::read_payload_uint8(int offset)
+{
+        if (offset <= 0)
+                return 0;
+        return payload[offset];
+}
+
+uint16_t ZigBeePacket::read_payload_uint16(int offset)
+{
+        if (offset <= 0)
+                return 0;
+        uint16_t value;
+        value  = (uint16_t)payload[offset]   << 8;
+        value |= (uint16_t)payload[offset+1];
+        return value;
+}
+
+uint32_t ZigBeePacket::read_payload_uint32(int offset)
+{
+        if (offset <= 0)
+                return 0;
+        uint32_t value;
+        value  = (uint32_t)payload[offset]   << 24;
+        value |= (uint32_t)payload[offset+1] << 16;
+        value |= (uint32_t)payload[offset+2] << 8;
+        value |= (uint32_t)payload[offset+3];
+        return value;
+}
+
+uint64_t ZigBeePacket::read_payload_uint64(int offset)
+{
+        if (offset <= 0)
+                return 0;
+        uint64_t value;
+        value  = (uint64_t)payload[offset]   << 56;
+        value |= (uint64_t)payload[offset+1] << 48;
+        value |= (uint64_t)payload[offset+2] << 40;
+        value |= (uint64_t)payload[offset+3] << 32;
+        value |= (uint64_t)payload[offset+4] << 24;
+        value |= (uint64_t)payload[offset+5] << 16;
+        value |= (uint64_t)payload[offset+6] << 8;
+        value |= (uint64_t)payload[offset+7];
+        return value;
+}
+
+void ZigBeePacket::write_payload_uint8(int offset, uint8_t value)
+{
+        if (offset <= 0)
+                return;
+        payload[offset] = value;
+}
+
+void ZigBeePacket::write_payload_uint16(int offset, uint16_t value)
+{
+        if (offset <= 0)
+                return;
+        payload[offset]   = value >> 8;
+        payload[offset+1] = value;
+}
+
+void ZigBeePacket::write_payload_uint32(int offset, uint32_t value)
+{
+        if (offset <= 0)
+                return;
+        payload[offset]   = value >> 24;
+        payload[offset+1] = value >> 16;
+        payload[offset+2] = value >> 8;
+        payload[offset+3] = value;
+}
+
+void ZigBeePacket::write_payload_uint64(int offset, uint64_t value)
+{
+        if (offset <= 0)
+                return;
+        payload[offset]   = value >> 56;
+        payload[offset+1] = value >> 48;
+        payload[offset+2] = value >> 40;
+        payload[offset+3] = value >> 32;
+        payload[offset+4] = value >> 24;
+        payload[offset+5] = value >> 16;
+        payload[offset+6] = value >> 8;
+        payload[offset+7] = value;
+}
 
 
 
