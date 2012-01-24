@@ -52,6 +52,7 @@ ZigBeeInterface::~ZigBeeInterface()
 
 void ZigBeeInterface::set_serial_interface(std::tr1::shared_ptr<SerialInterface> si)
 {
+        clear_serial_interface();
         if (!si)
                 return;
         ser_int = si;
