@@ -154,9 +154,9 @@ ZigBeeTerminal::ZigBeeTerminal()
         tv_pkt_log.set_model(tv_pkt_log_tm);
         tv_pkt_log.signal_cursor_changed().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_tv_pkt_log_cursor_changed) );
         
-        tv_pkt_log.append_column("Direction", cPacketLogModel.Direction);
+        tv_pkt_log.append_column("Dir", cPacketLogModel.Direction);
         tv_pkt_log.append_column("Type", cPacketLogModel.Type);
-        tv_pkt_log.append_column("Size", cPacketLogModel.Size);
+        tv_pkt_log.append_column("Sz", cPacketLogModel.Size);
         tv_pkt_log.append_column("Data", cPacketLogModel.Data);
         
         sw_pkt_log.add(tv_pkt_log);
@@ -223,12 +223,20 @@ ZigBeeTerminal::ZigBeeTerminal()
         dlgPort.set_stop_bits(stop_bits);
         dlgPort.set_flow_control(flow_control);
         
-        ser_int.port_opened().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_open) );
-        ser_int.port_closed().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_close) );
-        //ser_int.port_error().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_error) );
-        ser_int.port_receive_data().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_receive_data) );
+        ser_int = std::tr1::shared_ptr<SerialInterface>(new SerialInterface());
         
-        ser_int.set_debug(true);
+        ser_int->port_opened().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_open) );
+        ser_int->port_closed().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_close) );
+        //ser_int->port_error().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_error) );
+        //ser_int->port_receive_data().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_port_receive_data) );
+        
+        ser_int->set_debug(true);
+        
+        zb_int.set_serial_interface(ser_int);
+        
+        zb_int.signal_receive_packet().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_receive_packet) );
+        zb_int.signal_receive_raw_data().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_receive_raw_data) );
+        zb_int.signal_send_raw_data().connect( sigc::mem_fun(*this, &ZigBeeTerminal::on_send_raw_data) );
         
         show_all_children();
 }
@@ -331,9 +339,9 @@ bool ZigBeeTerminal::on_tv_key_press(GdkEventKey *key)
         
         if (str.length() > 0)
         {
-                if (ser_int.is_open() && !config_api_mode.get_active())
+                if (ser_int->is_open() && !config_api_mode.get_active())
                 {
-                        ser_int.write(str.c_str(), str.size(), num);
+                        ser_int->write(str.c_str(), str.size(), num);
                         
                         if (config_local_echo.get_active())
                         {
@@ -375,31 +383,10 @@ void ZigBeeTerminal::on_btn_pkt_builder_send_click()
         char *ptr;
         
         ZigBeePacket pkt = pkt_builder.get_packet();
-        std::vector<uint8_t> data = pkt.get_raw_packet();
         
         if (config_api_mode.get_active())
         {
-                len = data.size();
-                ptr = (char *)&data[0];
-                
-                while (len > 0)
-                {
-                        ret = ser_int.write(ptr, len, num);
-                        
-                        if (ret != SerialInterface::SS_Success)
-                        {
-                                std::cerr << "Error: unable to write packet!";
-                                return;
-                        }
-                        
-                        for (int i = 0; i < num; i++)
-                        {
-                                raw_data_log.push_back(0x1000 | ((int)ptr[i] & 0x00FF));
-                        }
-                        
-                        len -= num;
-                        ptr += num;
-                }
+                zb_int.send_packet(pkt);
                 
                 if (pkt.identifier == ZigBeePacket::ZBPID_TxRequest ||
                         pkt.identifier == ZigBeePacket::ZBPID_EATxRequest ||
@@ -435,114 +422,77 @@ void ZigBeeTerminal::on_port_open()
         
         std::cout << "on_port_open()" << std::endl;
         
-        port = ser_int.get_port();
-        baud = ser_int.get_baud();
+        port = ser_int->get_port();
+        baud = ser_int->get_baud();
         
         status.pop();
-        status.push(ser_int.get_status_string());
+        status.push(ser_int->get_status_string());
 }
 
 
 void ZigBeeTerminal::on_port_close()
 {
         status.pop();
-        status.push(ser_int.get_status_string());
+        status.push(ser_int->get_status_string());
 }
 
 
-void ZigBeeTerminal::on_port_receive_data()
+void ZigBeeTerminal::on_receive_packet(ZigBeePacket pkt)
 {
-        gsize num;
-        int status;
-        static char buf[1024];
-        
-        do
+        if (config_api_mode.get_active())
         {
-                status = ser_int.read(buf, 1024, num);
+                Gtk::TreeModel::iterator it = tv_pkt_log_tm->append();
+                Gtk::TreePath path = Gtk::TreePath(it);
+                Gtk::TreeModel::Row row = *it;
+                row[cPacketLogModel.Packet] = pkt;
+                row[cPacketLogModel.Direction] = "RX";
+                row[cPacketLogModel.Type] = pkt.get_type_desc();
+                row[cPacketLogModel.Size] = pkt.get_length();
+                row[cPacketLogModel.Data] = pkt.get_hex_packet();
+                tv_pkt_log.scroll_to_row(path);
                 
-                if (status == SerialInterface::SS_Error)
+                if (pkt.identifier == ZigBeePacket::ZBPID_TxRequest ||
+                        pkt.identifier == ZigBeePacket::ZBPID_EATxRequest ||
+                        pkt.identifier == ZigBeePacket::ZBPID_RxPacket ||
+                        pkt.identifier == ZigBeePacket::ZBPID_EARxPacket)
                 {
-                        std::cout << "Read error!" << std::endl;
-                        close_port();
-                        return;
-                }
-                
-                if (status == SerialInterface::SS_EOF)
-                {
-                        std::cout << "End of file!" << std::endl;
-                        close_port();
-                        return;
-                }
-                
-                std::cout << "Read " << std::dec << num << " bytes" << std::endl;
-                
-                for (int i = 0; i < num; i++)
-                {
-                        read_data_queue.push_back(buf[i]);
-                        raw_data_log.push_back(((int)buf[i] & 0x00FF));
-                }
-                
-                if (!config_api_mode.get_active())
-                {
-                        for (int i = 0; i < num; i++)
+                        for (int i = 0; i < pkt.data.size(); i++)
                         {
-                                data_log.push_back(((int)buf[i] & 0x00FF));
+                                data_log.push_back(((int)pkt.data[i] & 0x00FF));
                         }
                 }
+                
+                update_log();
         }
-        while (num == 1024);
+}
+
+void ZigBeeTerminal::on_receive_raw_data(const char *data, size_t len)
+{
+        for (size_t i = 0; i < len; i++)
+        {
+                raw_data_log.push_back(((int)data[i] & 0x00FF));
+        }
+        
+        if (!config_api_mode.get_active())
+        {
+                for (size_t i = 0; i < len; i++)
+                {
+                        data_log.push_back(((int)data[i] & 0x00FF));
+                }
+        }
         
         update_log();
         update_raw_log();
-        
-        on_receive_data();
 }
 
-void ZigBeeTerminal::on_receive_data()
+void ZigBeeTerminal::on_send_raw_data(const char *data, size_t len)
 {
-        ZigBeePacket pkt;
-        size_t len;
-        
-        if (config_api_mode.get_active())
+        for (size_t i = 0; i < len; i++)
         {
-                
-                do
-                {
-                        len = 0;
-                        if (pkt.read_packet(read_data_queue, len))
-                        {
-                                pkt.decode_packet();
-                                
-                                Gtk::TreeModel::iterator it = tv_pkt_log_tm->append();
-                                Gtk::TreePath path = Gtk::TreePath(it);
-                                Gtk::TreeModel::Row row = *it;
-                                row[cPacketLogModel.Packet] = pkt;
-                                row[cPacketLogModel.Direction] = "RX";
-                                row[cPacketLogModel.Type] = pkt.get_type_desc();
-                                row[cPacketLogModel.Size] = pkt.get_length();
-                                row[cPacketLogModel.Data] = pkt.get_hex_packet();
-                                tv_pkt_log.scroll_to_row(path);
-                                
-                                if (pkt.identifier == ZigBeePacket::ZBPID_TxRequest ||
-                                        pkt.identifier == ZigBeePacket::ZBPID_EATxRequest ||
-                                        pkt.identifier == ZigBeePacket::ZBPID_RxPacket ||
-                                        pkt.identifier == ZigBeePacket::ZBPID_EARxPacket)
-                                {
-                                        for (int i = 0; i < pkt.data.size(); i++)
-                                        {
-                                                data_log.push_back(((int)pkt.data[i] & 0x00FF));
-                                        }
-                                }
-                                
-                                update_log();
-                        }
-                        for (int i = 0; i < len; i++)
-                                read_data_queue.pop_front();
-                }
-                while (read_data_queue.size() > 0 && len > 0);
-                
+                raw_data_log.push_back(0x1000 | ((int)data[i] & 0x00FF));
         }
         
+        update_raw_log();
 }
 
 
@@ -662,22 +612,22 @@ void ZigBeeTerminal::update_raw_log()
 
 void ZigBeeTerminal::open_port()
 {
-        if (ser_int.is_open())
+        if (ser_int->is_open())
                 close_port();
         
-        ser_int.set_port(port);
-        ser_int.set_baud(baud);
-        ser_int.set_parity(parity);
-        ser_int.set_bits(bits);
-        ser_int.set_stop(stop_bits);
-        ser_int.set_flow(flow_control);
-        ser_int.open_port();
+        ser_int->set_port(port);
+        ser_int->set_baud(baud);
+        ser_int->set_parity(parity);
+        ser_int->set_bits(bits);
+        ser_int->set_stop(stop_bits);
+        ser_int->set_flow(flow_control);
+        ser_int->open_port();
 }
 
 
 void ZigBeeTerminal::close_port()
 {
-        ser_int.close_port();
+        ser_int->close_port();
 }
 
 

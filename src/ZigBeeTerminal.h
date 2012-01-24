@@ -36,9 +36,12 @@
 
 #include <gtkmm.h>
 
+#include <tr1/memory>
+
 #include "PortConfig.h"
 #include "SerialInterface.h"
 #include "ZigBeePacket.h"
+#include "ZigBeeInterface.h"
 #include "ZigBeePacketBuilder.h"
 
 // ZigBeeTerminal class
@@ -67,9 +70,10 @@ protected:
         
         void on_port_open();
         void on_port_close();
-        void on_port_receive_data();
         
-        void on_receive_data();
+        void on_receive_packet(ZigBeePacket pkt);
+        void on_receive_raw_data(const char *data, size_t len);
+        void on_send_raw_data(const char *data, size_t len);
         
         void update_log();
         void update_raw_log();
@@ -154,7 +158,9 @@ protected:
         int stop_bits;
         SerialInterface::SerialFlow flow_control;
         
-        SerialInterface ser_int;
+        std::tr1::shared_ptr<SerialInterface> ser_int;
+        
+        ZigBeeInterface zb_int;
         
         std::deque<char> read_data_queue;
         
