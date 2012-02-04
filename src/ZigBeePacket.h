@@ -45,6 +45,8 @@ class ZigBeePacket
 public:
         typedef enum
         {
+                ZBPID_TxRequest64 = 0x00,
+                ZBPID_TxRequest16 = 0x01,
                 ZBPID_ATCommand = 0x08,
                 ZBPID_ATCommandQueueRegisterValue = 0x09,
                 ZBPID_TxRequest = 0x10,
@@ -52,9 +54,14 @@ public:
                 ZBPID_RemoteATCommand = 0x17,
                 ZBPID_CreateSourceRoute = 0x21,
                 ZBPID_RegisterJoiningDevice = 0x24,
+                ZBPID_RxPacket64 = 0x80,
+                ZBPID_RxPacket16 = 0x81,
+                ZBPID_RxPacketIO64 = 0x82,
+                ZBPID_RxPacketIO16 = 0x83,
                 ZBPID_ATCommandResponse = 0x88,
+                ZBPID_TxStatusS1 = 0x89,
                 ZBPID_ModemStatus = 0x8a,
-                ZBPID_TxStatus = 0x8b,
+                ZBPID_TxStatusS2 = 0x8b,
                 ZBPID_RxPacket = 0x90,
                 ZBPID_EARxPacket = 0x91,
                 ZBPID_IODataSampleRx = 0x92,
@@ -71,6 +78,24 @@ public:
         ZBP_Identifier;
         
         // Data must be written in big endian
+        struct sZBP_TxRequest64
+        {
+                uint8_t identifier;
+                uint8_t frame_id;
+                uint64_t dest64;
+                uint8_t options;
+                uint8_t rf_data[];
+        } __attribute__ ((__packed__));
+        
+        struct sZBP_TxRequest16
+        {
+                uint8_t identifier;
+                uint8_t frame_id;
+                uint16_t dest16;
+                uint8_t options;
+                uint8_t rf_data[];
+        } __attribute__ ((__packed__));
+        
         struct sZBP_ATCommand
         {
                 uint8_t identifier;
@@ -145,6 +170,42 @@ public:
                 uint8_t key[];
         } __attribute__ ((__packed__));
         
+        struct sZBP_RxPacket64
+        {
+                uint8_t identifier;
+                uint64_t src64;
+                uint8_t rssi;
+                uint8_t options;
+                uint8_t rf_data[];
+        } __attribute__ ((__packed__));
+        
+        struct sZBP_RxPacket16
+        {
+                uint8_t identifier;
+                uint64_t src16;
+                uint8_t rssi;
+                uint8_t options;
+                uint8_t rf_data[];
+        } __attribute__ ((__packed__));
+        
+        struct sZBP_RxPacketIO64
+        {
+                uint8_t identifier;
+                uint64_t src64;
+                uint8_t rssi;
+                uint8_t options;
+                uint8_t rf_data[];
+        } __attribute__ ((__packed__));
+        
+        struct sZBP_RxPacketIO16
+        {
+                uint8_t identifier;
+                uint64_t src16;
+                uint8_t rssi;
+                uint8_t options;
+                uint8_t rf_data[];
+        } __attribute__ ((__packed__));
+        
         struct sZBP_ATCommandResponse
         {
                 uint8_t identifier;
@@ -154,13 +215,20 @@ public:
                 uint8_t at_cmd_data[];
         } __attribute__ ((__packed__));
         
+        struct sZBP_TxStatusS1
+        {
+                uint8_t identifier;
+                uint8_t frame_id;
+                uint8_t status;
+        } __attribute__ ((__packed__));
+        
         struct sZBP_ModemStatus
         {
                 uint8_t identifier;
                 uint8_t status;
         } __attribute__ ((__packed__));
         
-        struct sZBP_TxStatus
+        struct sZBP_TxStatusS2
         {
                 uint8_t identifier;
                 uint8_t frame_id;
@@ -356,6 +424,10 @@ public:
         int delivery_status_offset;
         uint8_t discovery_status;
         int discovery_status_offset;
+        
+        // RSSI
+        uint8_t rssi;
+        int rssi_offset;
         
         // sampling
         uint16_t digital_mask;

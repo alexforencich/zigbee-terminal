@@ -41,6 +41,10 @@ bool ZigBeePacket::is_valid_identifier(int identifier)
 {
         switch (identifier)
         {
+                case ZBPID_TxRequest64:
+                        return true;
+                case ZBPID_TxRequest16:
+                        return true;
                 case ZBPID_ATCommand:
                         return true;
                 case ZBPID_ATCommandQueueRegisterValue:
@@ -55,11 +59,21 @@ bool ZigBeePacket::is_valid_identifier(int identifier)
                         return true;
                 case ZBPID_RegisterJoiningDevice:
                         return true;
+                case ZBPID_RxPacket64:
+                        return true;
+                case ZBPID_RxPacket16:
+                        return true;
+                case ZBPID_RxPacketIO64:
+                        return true;
+                case ZBPID_RxPacketIO16:
+                        return true;
                 case ZBPID_ATCommandResponse:
+                        return true;
+                case ZBPID_TxStatusS1:
                         return true;
                 case ZBPID_ModemStatus:
                         return true;
-                case ZBPID_TxStatus:
+                case ZBPID_TxStatusS2:
                         return true;
                 case ZBPID_RxPacket:
                         return true;
@@ -109,6 +123,10 @@ std::string ZigBeePacket::get_type_desc(int identifier)
 {
         switch (identifier)
         {
+                case ZBPID_TxRequest64:
+                        return "Transmit Request (64-bit address)";
+                case ZBPID_TxRequest16:
+                        return "Transmit Request (16-bit address)";
                 case ZBPID_ATCommand:
                         return "AT Command";
                 case ZBPID_ATCommandQueueRegisterValue:
@@ -123,12 +141,22 @@ std::string ZigBeePacket::get_type_desc(int identifier)
                         return "Create Source Route";
                 case ZBPID_RegisterJoiningDevice:
                         return "Register Joining Device";
+                case ZBPID_RxPacket64:
+                        return "Receive Packet (64-bit address)";
+                case ZBPID_RxPacket16:
+                        return "Receive Packet (16-bit address)";
+                case ZBPID_RxPacketIO64:
+                        return "Receive Packet (64-bit address IO)";
+                case ZBPID_RxPacketIO16:
+                        return "Receive Packet (16-bit address IO)";
                 case ZBPID_ATCommandResponse:
                         return "AT Command Response";
+                case ZBPID_TxStatusS1:
+                        return "Transmit Status (S1)";
                 case ZBPID_ModemStatus:
                         return "Modem Status";
-                case ZBPID_TxStatus:
-                        return "Transmit Status";
+                case ZBPID_TxStatusS2:
+                        return "Transmit Status (S2)";
                 case ZBPID_RxPacket:
                         return "Receive Packet";
                 case ZBPID_EARxPacket:
@@ -217,6 +245,8 @@ void ZigBeePacket::zero()
         delivery_status_offset = 0;
         discovery_status = 0;
         discovery_status_offset = 0;
+        rssi = 0;
+        rssi_offset = 0;
         digital_mask = 0;
         digital_mask_offset = 0;
         analog_mask = 0;
@@ -387,6 +417,7 @@ bool ZigBeePacket::set_offsets()
         transmit_retries_offset = 0;
         delivery_status_offset = 0;
         discovery_status_offset = 0;
+        rssi_offset = 0;
         digital_mask_offset = 0;
         analog_mask_offset = 0;
         data_offset = 0;
@@ -397,6 +428,22 @@ bool ZigBeePacket::set_offsets()
         
         switch (identifier)
         {
+                case ZBPID_TxRequest64:
+                        frame_id_offset = 1;
+                        dest64_offset = 2;
+                        options_offset = 10;
+                        data_offset = 11;
+                        min_length = 11;
+                        field_count = 5;
+                        return true;
+                case ZBPID_TxRequest16:
+                        frame_id_offset = 1;
+                        dest16_offset = 2;
+                        options_offset = 4;
+                        data_offset = 5;
+                        min_length = 5;
+                        field_count = 5;
+                        return true;
                 case ZBPID_ATCommand:
                         frame_id_offset = 1;
                         at_cmd_offset = 2;
@@ -463,6 +510,38 @@ bool ZigBeePacket::set_offsets()
                         min_length = 13;
                         field_count = 6;
                         return true;
+                case ZBPID_RxPacket64:
+                        src64_offset = 1;
+                        rssi_offset = 9;
+                        options_offset = 10;
+                        data_offset = 11;
+                        min_length = 11;
+                        field_count = 5;
+                        return true;
+                case ZBPID_RxPacket16:
+                        src16_offset = 1;
+                        rssi_offset = 3;
+                        options_offset = 4;
+                        data_offset = 5;
+                        min_length = 5;
+                        field_count = 5;
+                        return true;
+                case ZBPID_RxPacketIO64:
+                        src64_offset = 1;
+                        rssi_offset = 9;
+                        options_offset = 10;
+                        data_offset = 11;
+                        min_length = 11;
+                        field_count = 5;
+                        return true;
+                case ZBPID_RxPacketIO16:
+                        src16_offset = 1;
+                        rssi_offset = 3;
+                        options_offset = 4;
+                        data_offset = 5;
+                        min_length = 5;
+                        field_count = 5;
+                        return true;
                 case ZBPID_ATCommandResponse:
                         frame_id_offset = 1;
                         at_cmd_offset = 2;
@@ -471,12 +550,18 @@ bool ZigBeePacket::set_offsets()
                         min_length = 5;
                         field_count = 5;
                         return true;
+                case ZBPID_TxStatusS1:
+                        frame_id_offset = 1;
+                        status_offset = 2;
+                        min_length = 3;
+                        field_count = 3;
+                        return true;
                 case ZBPID_ModemStatus:
                         status_offset = 1;
                         min_length = 2;
                         field_count = 2;
                         return true;
-                case ZBPID_TxStatus:
+                case ZBPID_TxStatusS2:
                         frame_id_offset = 1;
                         dest16_offset = 2;
                         transmit_retries_offset = 4;
@@ -636,6 +721,7 @@ bool ZigBeePacket::build_packet()
         write_payload_uint8(transmit_retries_offset, transmit_retries);
         write_payload_uint8(delivery_status_offset, delivery_status);
         write_payload_uint8(discovery_status_offset, discovery_status);
+        write_payload_uint8(rssi_offset, rssi);
         write_payload_uint16(digital_mask_offset, digital_mask);
         write_payload_uint8(analog_mask_offset, analog_mask);
         write_payload_uint8(num_samples_offset, num_samples);
@@ -782,6 +868,11 @@ bool ZigBeePacket::decode_packet()
         if (discovery_status_offset)
         {
                 discovery_status = read_payload_uint8(discovery_status_offset);
+        }
+        
+        if (rssi_offset)
+        {
+                rssi = read_payload_uint8(rssi_offset);
         }
         
         if (digital_mask_offset)
@@ -937,6 +1028,11 @@ std::string ZigBeePacket::get_desc()
                 if (discovery_status_offset == i)
                 {
                         desc << "  Discovery Status: 0x" << std::setfill('0') << std::setw(2) << std::hex << (int)discovery_status << std::endl;
+                }
+                
+                if (rssi_offset == i)
+                {
+                        desc << "  RSSI: -" << std::dec << (int)rssi << " dBm" << std::endl;
                 }
                 
                 if (digital_mask_offset == i)
