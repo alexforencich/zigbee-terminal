@@ -280,7 +280,7 @@ std::vector<uint8_t> ZigBeePacket::get_raw_packet()
 {
         std::vector<uint8_t> dataout;
         
-        dataout.push_back(0x7e);
+        dataout.push_back(ZIGBEE_IDENTIFIER);
         dataout.push_back(payload.size() >> 8);
         dataout.push_back(payload.size());
         
@@ -296,13 +296,14 @@ std::vector<uint8_t> ZigBeePacket::get_escaped_raw_packet()
         std::vector<uint8_t> datain = get_raw_packet();
         std::vector<uint8_t> dataout;
         
-        dataout.push_back(0x7e);
+        dataout.push_back(ZIGBEE_IDENTIFIER);
         
         for (int i = 1; i < datain.size(); i++)
         {
-                if (datain[i] == 0x7e || datain[i] == 0x7d || datain[i] == 0x11 || datain[i] == 0x13)
+                if (datain[i] == ZIGBEE_IDENTIFIER || datain[i] == ZIGBEE_ESCAPE ||
+                        datain[i] == 0x11 || datain[i] == 0x13)
                 {
-                        dataout.push_back(0x7d);
+                        dataout.push_back(ZIGBEE_ESCAPE);
                         dataout.push_back(datain[i]^0x20);
                 }
                 else
@@ -346,7 +347,7 @@ bool ZigBeePacket::read_packet(uint8_t *bytes, size_t count, size_t &bytes_read)
                 return false;
         
         // find packet start byte
-        while ((*(ptr++) != 0x7e) & (n++ < count)) { }
+        while ((*(ptr++) != ZIGBEE_IDENTIFIER) & (n++ < count)) { }
         
         // start of packet offset
         // to discard junk ahead of incomplete packet

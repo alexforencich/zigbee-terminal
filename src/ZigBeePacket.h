@@ -39,6 +39,9 @@
 #include <deque>
 #include <inttypes.h>
 
+#define ZIGBEE_IDENTIFIER 0x7E
+#define ZIGBEE_ESCAPE 0x7D
+
 // ZigBeePacket class
 class ZigBeePacket
 {
