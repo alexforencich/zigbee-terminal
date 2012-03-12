@@ -159,6 +159,8 @@ ZigBeeTerminal::ZigBeeTerminal()
         tv_pkt_log.append_column("Sz", cPacketLogModel.Size);
         tv_pkt_log.append_column("Data", cPacketLogModel.Data);
         
+        tv_pkt_log.modify_font(Pango::FontDescription("monospace"));
+        
         sw_pkt_log.add(tv_pkt_log);
         sw_pkt_log.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
         vpane_pkt_log.pack1(sw_pkt_log, true, true);
