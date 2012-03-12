@@ -112,7 +112,7 @@ void ZigBeeInterface::send_packet(ZigBeePacket pkt)
                 
                 if (ret != SerialInterface::SS_Success)
                 {
-                        std::cerr << "[ZigBeeInterface] Error: unable to write packet!";
+                        std::cerr << "[ZigBeeInterface] Error: unable to write packet!" << std::endl;
                         m_signal_error.emit();
                         return;
                 }
