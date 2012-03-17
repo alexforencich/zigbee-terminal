@@ -224,6 +224,11 @@ void ZigBeePacketBuilder::on_field_change(int offset, int index)
                 pkt.discovery_status = parse_number(fields[index]->get_text());
         }
         
+        if (pkt.rssi_offset == offset)
+        {
+                pkt.rssi = parse_number(fields[index]->get_text());
+        }
+        
         if (pkt.digital_mask_offset == offset)
         {
                 pkt.digital_mask = parse_number(fields[index]->get_text());
@@ -696,6 +701,21 @@ void ZigBeePacketBuilder::read_packet()
                                 row++;
                         }
                         
+                        if (pkt.rssi_offset == i)
+                        {
+                                labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
+                                labels.back()->set_label("RSSI:");
+                                labels.back()->set_visible(true);
+                                tbl.attach(*labels.back(), 0, 1, row, row+1);
+                                
+                                fields.push_back(shared_ptr<Gtk::Entry>(new Gtk::Entry()));
+                                fields.back()->signal_changed().connect(sigc::bind(sigc::mem_fun(*this, &ZigBeePacketBuilder::on_field_change), i, fields.size()-1));
+                                fields.back()->set_visible(true);
+                                tbl.attach(*fields.back(), 1, 2, row, row+1);
+                                
+                                row++;
+                        }
+                        
                         if (pkt.digital_mask_offset == i)
                         {
                                 labels.push_back(shared_ptr<Gtk::Label>(new Gtk::Label()));
@@ -965,6 +985,15 @@ void ZigBeePacketBuilder::read_packet()
                 {
                         ss.str("");
                         ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)pkt.discovery_status;
+                        fields[row]->set_text(ss.str());
+                        
+                        row++;
+                }
+                
+                if (pkt.rssi_offset == i)
+                {
+                        ss.str("");
+                        ss << std::dec << (int)pkt.rssi;
                         fields[row]->set_text(ss.str());
                         
                         row++;
