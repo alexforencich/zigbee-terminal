@@ -88,7 +88,7 @@ public:
                 uint64_t dest64;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_TxRequest16
         {
@@ -97,7 +97,7 @@ public:
                 uint16_t dest16;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_ATCommand
         {
@@ -105,7 +105,7 @@ public:
                 uint8_t frame_id;
                 uint8_t at_cmd[2];
                 uint8_t at_cmd_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_ATCommandQueueRegisterValue
         {
@@ -113,7 +113,7 @@ public:
                 uint8_t frame_id;
                 uint8_t at_cmd[2];
                 uint8_t at_cmd_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_TxRequest
         {
@@ -124,7 +124,7 @@ public:
                 uint8_t radius;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_EATxRequest
         {
@@ -139,7 +139,7 @@ public:
                 uint8_t radius;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RemoteATCommand
         {
@@ -150,7 +150,7 @@ public:
                 uint8_t options;
                 uint8_t at_cmd[2];
                 uint8_t at_cmd_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_CreateSourceRoute
         {
@@ -161,7 +161,7 @@ public:
                 uint8_t options;
                 uint8_t num_route_records;
                 uint16_t route_records[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RegisterJoiningDevice
         {
@@ -171,7 +171,7 @@ public:
                 uint16_t dest16;
                 uint8_t options;
                 uint8_t key[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RxPacket64
         {
@@ -180,7 +180,7 @@ public:
                 uint8_t rssi;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RxPacket16
         {
@@ -189,7 +189,7 @@ public:
                 uint8_t rssi;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RxPacketIO64
         {
@@ -198,7 +198,7 @@ public:
                 uint8_t rssi;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RxPacketIO16
         {
@@ -207,7 +207,7 @@ public:
                 uint8_t rssi;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_ATCommandResponse
         {
@@ -216,20 +216,20 @@ public:
                 uint8_t at_cmd[2];
                 uint8_t status;
                 uint8_t at_cmd_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_TxStatusS1
         {
                 uint8_t identifier;
                 uint8_t frame_id;
                 uint8_t status;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_ModemStatus
         {
                 uint8_t identifier;
                 uint8_t status;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_TxStatusS2
         {
@@ -239,7 +239,7 @@ public:
                 uint8_t transmit_retries;
                 uint8_t delivery_status;
                 uint8_t discovery_status;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RxPacket
         {
@@ -248,7 +248,7 @@ public:
                 uint16_t src16;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_EARxPacket
         {
@@ -261,7 +261,7 @@ public:
                 uint16_t profile_id;
                 uint8_t options;
                 uint8_t rf_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_IODataSampleRx
         {
@@ -273,7 +273,7 @@ public:
                 uint16_t digital_mask;
                 uint8_t analog_mask;
                 uint8_t sample[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_SensorRead
         {
@@ -284,7 +284,7 @@ public:
                 uint8_t one_wire_sensors;
                 uint16_t analog_sensors[4];
                 uint16_t temp_read;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_NodeIdentification
         {
@@ -295,7 +295,7 @@ public:
                 uint16_t src16;
                 uint64_t src64;
                 uint8_t other_fields[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RemoteCommandResponse
         {
@@ -306,7 +306,7 @@ public:
                 uint8_t at_cmd[2];
                 uint8_t status;
                 uint8_t at_cmd_data[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_OTAFirmwareUpdateStatus
         {
@@ -317,7 +317,7 @@ public:
                 uint8_t bootloader_msg_type;
                 uint8_t block_num;
                 uint64_t target64;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RouteRecord
         {
@@ -327,7 +327,7 @@ public:
                 uint8_t options;
                 uint8_t num_route_records;
                 uint16_t route_records[];
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_DeviceAuthenticated
         {
@@ -335,7 +335,7 @@ public:
                 uint64_t src64;
                 uint16_t src16;
                 uint8_t status;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_ManyToOneRouteRequest
         {
@@ -344,14 +344,14 @@ public:
                 uint64_t src64;
                 uint16_t src16;
                 uint8_t reserved;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_RegisterJoiningDeviceStatus
         {
                 uint8_t identifier;
                 uint8_t frame_id;
                 uint8_t status;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         struct sZBP_JoinNotificationStatus
         {
@@ -361,7 +361,7 @@ public:
                 uint16_t new16;
                 uint64_t new64;
                 uint8_t status;
-        } __attribute__ ((__packed__));
+        } __attribute__ ((gcc_struct, __packed__));
         
         ZigBeePacket();
         virtual ~ZigBeePacket();
