@@ -327,12 +327,14 @@ bool ZigBeePacket::read_packet(std::vector<uint8_t> bytes, size_t &bytes_read)
 
 bool ZigBeePacket::read_packet(std::deque<char> bytes, size_t &bytes_read)
 {
-        return read_packet((uint8_t *)&bytes[0], bytes.size(), bytes_read);
+        std::vector<char> v(bytes.begin(), bytes.end());
+        return read_packet(v, bytes_read);
 }
 
 bool ZigBeePacket::read_packet(std::deque<uint8_t> bytes, size_t &bytes_read)
 {
-        return read_packet(&bytes[0], bytes.size(), bytes_read);
+        std::vector<uint8_t> v(bytes.begin(), bytes.end());
+        return read_packet(v, bytes_read);
 }
 
 bool ZigBeePacket::read_packet(uint8_t *bytes, size_t count, size_t &bytes_read)
