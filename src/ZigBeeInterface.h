@@ -56,6 +56,8 @@ public:
         void clear_serial_interface();
         bool has_serial_interface();
         
+        bool is_connected();
+        
         void reset_buffer();
         
         void send_packet(ZigBeePacket pkt);

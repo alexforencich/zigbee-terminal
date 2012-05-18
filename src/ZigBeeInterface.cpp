@@ -80,6 +80,12 @@ bool ZigBeeInterface::has_serial_interface()
 }
 
 
+bool ZigBeeInterface::is_connected()
+{
+        return ser_int && ser_int->is_open();
+}
+
+
 void ZigBeeInterface::reset_buffer()
 {
         read_data_queue.clear();
