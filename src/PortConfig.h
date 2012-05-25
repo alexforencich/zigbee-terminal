@@ -40,40 +40,155 @@
 
 #include <gtkmm.h>
 
-// PortConfig class
+/** Port Config Dialog
+ * 
+ * Serial port configuration dialog.  Allows for easy selection of serial
+ * interface parameters.  
+ */
 class PortConfig : public Gtk::Dialog
 {
 public:
+        /**
+         * Create a new Port Config dialog.
+         */
         PortConfig();
         virtual ~PortConfig();
         
+        /**
+         * Update port list.
+         */
         void refresh_ports();
         
+        /**
+         * Set serial port.
+         * @param p port
+         */
         void set_port(Glib::ustring p);
+        
+        /**
+         * Get serial port.
+         * @return port
+         */
+        Glib::ustring get_port();
+        
+        /**
+         * Set baud rate.
+         * @param b baud rate
+         */
         void set_baud(unsigned long b);
-        void set_parity(SerialInterface::SerialParity p);
+        
+        /**
+         * Get baud rate.
+         * @return baud rate
+         */
+        unsigned long get_baud();
+        
+        /**
+         * Set number of bits.
+         * @param b bits
+         */
         void set_bits(int b);
-        void set_stop_bits(int sb);
+        
+        /**
+         * Get number of bits.
+         * @return bits
+         */
+        int get_bits();
+        
+        /**
+         * Set flow control.
+         * @param f flow control
+         */
         void set_flow_control(SerialInterface::SerialFlow f);
         
-        Glib::ustring get_port();
-        unsigned long get_baud();
-        SerialInterface::SerialParity get_parity();
-        int get_bits();
-        int get_stop_bits();
+        /**
+         * Get flow control.
+         * @return flow control
+         */
         SerialInterface::SerialFlow get_flow_control();
+        
+        /**
+         * Set parity.
+         * @param p parity
+         */
+        void set_parity(SerialInterface::SerialParity p);
+        
+        /**
+         * Get parity.
+         * @return parity
+         */
+        SerialInterface::SerialParity get_parity();
+        
+        /**
+         * Set stop bit count.
+         * @param s bits
+         */
+        void set_stop_bits(int s);
+        
+        /**
+         * Get stop bit count.
+         * @return bits
+         */
+        int get_stop_bits();
         
 protected:
         //Signal handlers:
+        
+        /**
+         * Show signal handler
+         */
         virtual void on_show();
+        
+        /**
+         * OK button click signal handler
+         */
         void on_ok_click();
+        
+        /**
+         * Cancel button click signal handler
+         */
         void on_cancel_click();
         
+        /**
+         * Select port in combo box
+         * @param p port
+         * @return port
+         */
         Glib::ustring select_port(Glib::ustring p);
+        
+        /**
+         * Select baud rate in combo box
+         * @param b baud rate
+         * @return baud rate
+         */
         unsigned long select_baud(unsigned long b);
+        
+        /**
+         * Select parity setting in combo box
+         * @param p serial parity setting
+         * @return serial parity setting
+         */
         SerialInterface::SerialParity select_parity(SerialInterface::SerialParity p);
+        
+        /**
+         * Select data bit count setting in combo box
+         * @param b data bit count
+         * @return data bit count
+         */
         int select_bits(int b);
+        
+        /**
+         * Select stop bit count setting in combo box
+         * @param sb stop bit count
+         * @return stop bit count
+         */
         int select_stop_bits(int sb);
+        
+        /**
+         * Select flow control setting in combo box
+         * @param f flow control setting
+         * @return flow control setting
+         */
         SerialInterface::SerialFlow select_flow_control(SerialInterface::SerialFlow f);
         
         
